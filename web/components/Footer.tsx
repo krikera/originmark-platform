@@ -38,15 +38,15 @@ export const Footer = () => (
           <ul className="space-y-2.5 text-sm text-surface-500">
             <li>
               <a
-                href="https://github.com/krikera/originmark"
+                href="https://github.com/krikera/originmark-platform"
                 target="_blank"
                 className="inline-flex items-center gap-1 transition-colors hover:text-accent-500"
               >
                 GitHub <ArrowUpRight className="h-3 w-3" />
               </a>
             </li>
-            <li><a href="https://github.com/krikera/originmark#readme" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent-500">Documentation</a></li>
-            <li><a href="https://github.com/krikera/originmark/blob/main/docs/DEVELOPER_GUIDE.md" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent-500">API Reference</a></li>
+            <li><a href="https://github.com/krikera/originmark-platform#readme" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent-500">Documentation</a></li>
+            <li><a href="https://github.com/krikera/originmark-platform/blob/main/docs/DEVELOPER_GUIDE.md" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent-500">API Reference</a></li>
           </ul>
         </div>
 
@@ -56,7 +56,7 @@ export const Footer = () => (
             Legal
           </h4>
           <ul className="space-y-2.5 text-sm text-surface-500">
-            <li><a href="https://github.com/krikera/originmark/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent-500">License (MIT)</a></li>
+            <li><a href="https://github.com/krikera/originmark-platform/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent-500">License (MIT)</a></li>
           </ul>
         </div>
       </div>
@@ -67,7 +67,7 @@ export const Footer = () => (
           © {new Date().getFullYear()} OriginMark. Open source under MIT License.
         </p>
         <a
-          href="https://github.com/krikera/originmark"
+          href="https://github.com/krikera/originmark-platform"
           target="_blank"
           className="inline-flex items-center gap-2 text-sm text-surface-500 transition-colors hover:text-accent-500"
         >

@@ -14,7 +14,7 @@ OriginMark lets you prove that content (text, images, etc.) came from a specific
 
 ```bash
 # Clone and set up
-git clone https://github.com/krikera/originmark
+git clone https://github.com/krikera/originmark-platform
 cd originmark
 
 # Run the API

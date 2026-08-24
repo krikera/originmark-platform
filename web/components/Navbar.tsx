@@ -23,7 +23,7 @@ export const Navbar = () => {
           <a href="#features" className="transition-colors hover:text-accent-500">Features</a>
           <a href="#how-it-works" className="transition-colors hover:text-accent-500">How it Works</a>
           <a
-            href="https://github.com/krikera/originmark"
+            href="https://github.com/krikera/originmark-platform"
             target="_blank"
             className="flex items-center gap-1.5 transition-colors hover:text-accent-500"
           >
@@ -52,7 +52,7 @@ export const Navbar = () => {
               <a href="#features" className="transition-colors hover:text-accent-500" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
               <a href="#how-it-works" className="transition-colors hover:text-accent-500" onClick={() => setIsMobileMenuOpen(false)}>How it Works</a>
               <a
-                href="https://github.com/krikera/originmark"
+                href="https://github.com/krikera/originmark-platform"
                 target="_blank"
                 className="flex items-center gap-1.5 transition-colors hover:text-accent-500"
                 onClick={() => setIsMobileMenuOpen(false)}

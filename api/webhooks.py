@@ -8,6 +8,23 @@ from datetime import datetime, timezone
 import aiohttp
 from pydantic import BaseModel, HttpUrl
 from enum import Enum
+import hmac
+import hashlib
+import socket
+import ipaddress
+from urllib.parse import urlparse
+
+def is_safe_url(url_str: str) -> bool:
+    try:
+        parsed = urlparse(url_str)
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        ip = socket.gethostbyname(hostname)
+        ip_obj = ipaddress.ip_address(ip)
+        return not (ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local or ip_obj.is_multicast)
+    except Exception:
+        return False
 
 class WebhookType(str, Enum):
     SLACK = "slack"
@@ -23,6 +40,7 @@ class WebhookConfig(BaseModel):
     events: List[WebhookEvent]
     is_active: bool = True
     secret: Optional[str] = None
+    user_id: str
 
 class WebhookManager:
     def __init__(self):
@@ -43,6 +61,15 @@ class WebhookManager:
         else:  # Discord
             message = self.format_discord_message(event, data)
         
+        headers = {"Content-Type": "application/json"}
+        if webhook.secret:
+            signature = hmac.new(
+                webhook.secret.encode('utf-8'),
+                json.dumps(message).encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            headers["X-Signature-256"] = signature
+        
         if not self.session:
             self.session = aiohttp.ClientSession()
             
@@ -50,7 +77,7 @@ class WebhookManager:
             async with self.session.post(
                 str(webhook.url), 
                 json=message,
-                headers={"Content-Type": "application/json"}
+                headers=headers
             ) as response:
                 if response.status >= 400:
                     print(f"Webhook failed with status {response.status}")

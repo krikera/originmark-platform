@@ -8,11 +8,11 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ handleStart }: HeroSectionProps) => (
-  <header className="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
+  <header className="relative overflow-hidden pt-28 sm:pt-36">
     {/* Accent glow behind hero */}
     <div className="pointer-events-none absolute left-1/2 top-1/3 -z-10 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-500/[0.07] blur-[120px]" />
 
-    <div className="container mx-auto max-w-6xl px-6">
+    <div className="container mx-auto max-w-6xl px-6 pb-20 lg:pb-32">
       <div className="grid gap-12 lg:grid-cols-2 lg:items-center xl:gap-20">
         {/* Left Column: Text */}
         <motion.div
@@ -26,20 +26,19 @@ export const HeroSection = ({ handleStart }: HeroSectionProps) => (
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent-500/20 bg-accent-500/[0.06] px-4 py-1.5 text-sm font-medium text-accent-400"
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-accent-500/20 bg-accent-500/[0.06] px-4 py-1.5 text-sm font-medium text-accent-400"
           >
             <Sparkles className="h-4 w-4" />
             <span>Open-Source Content Provenance</span>
           </motion.div>
 
           {/* Headline */}
-          <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Prove the Origin of{" "}
-            <span className="gradient-text">AI Content</span>
+          <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl text-balance">
+            Prove the Origin of <span className="gradient-text">AI Content</span>
           </h1>
 
           {/* Subtitle */}
-          <p className="mb-10 text-base leading-relaxed text-surface-300 sm:text-lg">
+          <p className="mb-10 max-w-xl mx-auto lg:mx-0 text-base leading-relaxed text-surface-300 sm:text-lg text-balance">
             OriginMark adds an immutable cryptographic seal to any AI-generated
             artifact. Sign it. Ship it. Let anyone verify it instantly.
           </p>
@@ -67,22 +66,6 @@ export const HeroSection = ({ handleStart }: HeroSectionProps) => (
               Verify Authenticity
             </motion.button>
           </div>
-
-          {/* Trust markers */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-surface-400 lg:justify-start">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-accent-500" />
-              <span>Ed25519 Signatures</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-accent-500" />
-              <span>Tamper-proof</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-accent-500" />
-              <span>Offline Verifiable</span>
-            </div>
-          </div>
         </motion.div>
 
         {/* Right Column: Animated Shield */}
@@ -94,6 +77,24 @@ export const HeroSection = ({ handleStart }: HeroSectionProps) => (
         >
           <AnimatedShield />
         </motion.div>
+      </div>
+    </div>
+
+    {/* Trust markers moved out of hero stack */}
+    <div className="border-y border-surface-800 bg-surface-900/30 py-8">
+      <div className="container mx-auto max-w-6xl px-6 flex flex-wrap justify-center gap-8 text-sm text-surface-400 lg:justify-start">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-accent-500" />
+          <span>Ed25519 Signatures</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-accent-500" />
+          <span>Tamper-proof</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-accent-500" />
+          <span>Offline Verifiable</span>
+        </div>
       </div>
     </div>
   </header>

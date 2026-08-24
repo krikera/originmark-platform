@@ -19,6 +19,14 @@ import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+import os
+
+limiter = Limiter(
+    key_func=get_remote_address, 
+    enabled=os.environ.get("TESTING") != "true"
+)
 
 from db import get_db, APIKey, User, hash_api_key
 
@@ -26,7 +34,9 @@ from db import get_db, APIKey, User, hash_api_key
 # ── Configuration ────────────────────────────────────────────────────────────
 
 # JWT secret
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "originmark-dev-secret-change-in-production")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY or JWT_SECRET_KEY == "originmark-dev-secret-change-in-production":
+    raise RuntimeError("JWT_SECRET_KEY environment variable is required and must not be the default")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = int(os.environ.get("JWT_EXPIRATION_HOURS", "24"))
 
@@ -173,6 +183,11 @@ async def get_current_user_id(
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
+        
+    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
+        
     return user_id
 
 

@@ -50,6 +50,7 @@ const nextConfig: NextConfig = {
     experimental: {
         optimizePackageImports: ["lucide-react", "framer-motion"],
     },
+    productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;

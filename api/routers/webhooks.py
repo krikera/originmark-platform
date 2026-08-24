@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from db import get_db
 from dependencies import get_current_user_id
-from webhooks import webhook_manager, WebhookConfig, WebhookType, WebhookEvent
+from webhooks import webhook_manager, WebhookConfig, WebhookType, WebhookEvent, is_safe_url
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
@@ -36,6 +36,9 @@ async def create_webhook(
     db: Session = Depends(get_db),
 ):
     """Create a new webhook"""
+    if not is_safe_url(webhook_data.url):
+        raise HTTPException(status_code=400, detail="Invalid or unsafe webhook URL")
+
     webhook_id = str(uuid.uuid4())
 
     webhook_config = WebhookConfig(
@@ -45,6 +48,7 @@ async def create_webhook(
         type=webhook_data.type,
         events=webhook_data.events,
         secret=webhook_data.secret,
+        user_id=user_id,
     )
 
     webhook_manager.webhooks[webhook_id] = webhook_config
@@ -72,6 +76,7 @@ async def list_webhooks(
             "is_active": webhook.is_active,
         }
         for webhook in webhook_manager.webhooks.values()
+        if webhook.user_id == user_id
     ]
 
     return {"webhooks": webhooks}
@@ -84,6 +89,9 @@ async def delete_webhook(
 ):
     """Delete a webhook"""
     if webhook_id in webhook_manager.webhooks:
+        webhook = webhook_manager.webhooks[webhook_id]
+        if webhook.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this webhook")
         del webhook_manager.webhooks[webhook_id]
         return {"message": "Webhook deleted successfully"}
     else:

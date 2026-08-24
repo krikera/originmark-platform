@@ -12,8 +12,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-# Set test JWT secret before importing app modules
+# Set test env vars before importing app modules
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-testing-only"
+os.environ["TESTING"] = "true"
 
 from db import Base, get_db
 from main import app

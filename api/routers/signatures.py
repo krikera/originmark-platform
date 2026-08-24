@@ -20,6 +20,7 @@ from typing import Optional
 import nacl.signing
 import nacl.exceptions
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+import html
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -57,7 +58,10 @@ async def sign_content(
     start_time = time.time()
     try:
         if file:
-            content = await file.read()
+            MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB
+            content = await file.read(MAX_FILE_SIZE + 1)
+            if len(content) > MAX_FILE_SIZE:
+                raise HTTPException(status_code=413, detail="File too large (max 25MB)")
             content_type = "image" if file.content_type and file.content_type.startswith("image") else "text"
             file_name = file.filename
             file_size = len(content)
@@ -163,7 +167,7 @@ async def sign_content(
             user_agent=request.headers.get("user-agent"),
             metadata={"error": str(e)},
         )
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/signatures/{signature_id}/c2pa")
@@ -278,7 +282,7 @@ async def verify_content(
             user_agent=request.headers.get("user-agent"),
             metadata={"error": str(e)},
         )
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/badge")
@@ -289,6 +293,11 @@ async def get_badge(id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Signature not found")
 
     metadata = json.loads(db_signature.metadata_json) if db_signature.metadata_json else {}
+
+    author = html.escape(str(metadata.get('author', 'Unknown')))
+    model_used = html.escape(str(metadata.get('model_used', 'Not specified')))
+    content_type = html.escape(str(metadata.get('content_type', 'Unknown')))
+    timestamp = html.escape(str(metadata.get('timestamp', 'Unknown')))
 
     badge_html = f"""
     <!DOCTYPE html>
@@ -307,12 +316,12 @@ async def get_badge(id: str, db: Session = Depends(get_db)):
         <div class="badge">
             <div class="verified">✓ Verified AI Content</div>
             <div class="details">
-                <p><strong>Author:</strong> {metadata.get('author', 'Unknown')}</p>
-                <p><strong>Model:</strong> {metadata.get('model_used', 'Not specified')}</p>
-                <p><strong>Timestamp:</strong> {metadata.get('timestamp', 'Unknown')}</p>
-                <p><strong>Content Type:</strong> {metadata.get('content_type', 'Unknown')}</p>
+                <p><strong>Author:</strong> {author}</p>
+                <p><strong>Model:</strong> {model_used}</p>
+                <p><strong>Timestamp:</strong> {timestamp}</p>
+                <p><strong>Content Type:</strong> {content_type}</p>
                 <p><strong>Hash:</strong></p>
-                <div class="hash">{db_signature.content_hash}</div>
+                <div class="hash">{html.escape(str(db_signature.content_hash))}</div>
             </div>
         </div>
     </body>

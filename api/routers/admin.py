@@ -14,17 +14,24 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlalchemy.orm import Session
 
-from db import get_db, APIKey, UserFeedback
+from db import get_db, APIKey, UserFeedback, User
 from dependencies import get_api_key, get_optional_api_key
 from telemetry import telemetry
 
 router = APIRouter(tags=["admin"])
 
+def require_admin(api_key: APIKey = Depends(get_api_key), db: Session = Depends(get_db)) -> APIKey:
+    """Verify that the API key belongs to an admin user."""
+    user = db.query(User).filter(User.id == api_key.user_id).first()
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return api_key
+
 
 @router.get("/admin/metrics")
 async def get_admin_metrics(
     days: int = 7,
-    api_key: APIKey = Depends(get_api_key),
+    api_key: APIKey = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Get metrics dashboard for admin users"""
@@ -84,7 +91,7 @@ async def submit_feedback(
 async def get_feedback(
     status: Optional[str] = None,
     limit: int = 50,
-    api_key: APIKey = Depends(get_api_key),
+    api_key: APIKey = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Get user feedback (admin only)"""
@@ -119,7 +126,7 @@ async def get_feedback(
 async def update_feedback_status(
     feedback_id: str,
     status: str,
-    api_key: APIKey = Depends(get_api_key),
+    api_key: APIKey = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Update feedback status (admin only)"""

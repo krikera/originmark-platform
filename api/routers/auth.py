@@ -13,12 +13,12 @@ import uuid
 from typing import Optional
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
 from db import get_db, User, APIKey, generate_api_key, hash_api_key
-from dependencies import verify_password, create_access_token, get_current_user
+from dependencies import verify_password, create_access_token, get_current_user, limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,9 +26,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # ── Pydantic models ─────────────────────────────────────────────────────────
 
 class CreateUserRequest(BaseModel):
-    email: str
-    username: str
-    password: str
+    email: EmailStr
+    username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
+    password: str = Field(..., min_length=8, max_length=128)
 
 
 class LoginRequest(BaseModel):
@@ -75,7 +75,8 @@ async def register_user(user_data: CreateUserRequest, db: Session = Depends(get_
 
 
 @router.post("/login")
-async def login_user(login_data: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login_user(request: Request, login_data: LoginRequest, db: Session = Depends(get_db)):
     """Authenticate a user and return a JWT access token."""
     # Find user by username or email
     user = db.query(User).filter(

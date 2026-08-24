@@ -46,7 +46,7 @@ export const AnimatedShield = () => {
         <Fingerprint className="h-14 w-14 text-surface-950 sm:h-16 sm:w-16" />
       </motion.div>
 
-      {/* Floating data particles — only rendered client-side to avoid hydration mismatch */}
+      {/* Floating data particles: only rendered client-side to avoid hydration mismatch */}
       {mounted && PARTICLE_CONFIG.map((p, i) => (
         <motion.div
           key={i}

@@ -9,6 +9,7 @@ import base64
 from datetime import datetime, timezone
 import hashlib
 import uuid
+import os
 from dataclasses import dataclass, asdict
 
 @dataclass
@@ -195,7 +196,8 @@ class C2PAManifestExporter:
         json_str = json.dumps(manifest, indent=2, sort_keys=True)
         
         if output_path:
-            with open(output_path, 'w') as f:
+            safe_filename = os.path.basename(output_path)
+            with open(safe_filename, 'w') as f:
                 f.write(json_str)
                 
         return json_str
@@ -216,13 +218,15 @@ class C2PAManifestExporter:
             Path to sidecar file
         """
         if not output_path:
-            output_path = f"{asset_path}.c2pa"
+            output_path = f"{os.path.basename(asset_path)}.c2pa"
+        else:
+            output_path = os.path.basename(output_path)
             
         manifest = self.create_c2pa_manifest(originmark_signature)
         
         # Add asset reference
         manifest["asset_reference"] = {
-            "path": asset_path,
+            "path": os.path.basename(asset_path),
             "hash": originmark_signature.get("content_hash")
         }
         

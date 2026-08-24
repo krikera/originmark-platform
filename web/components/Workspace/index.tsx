@@ -21,6 +21,8 @@ import {
 import { clsx } from "clsx";
 import { Mode, FileResult, SignatureResult, VerificationResult } from "../../types";
 import { TerminalResult } from "./TerminalResult";
+import { WorkspaceInput } from "../ui/WorkspaceInput";
+import { VerifyFileCard } from "../ui/VerifyFileCard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -291,40 +293,20 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                 exit={{ opacity: 0, height: 0 }}
                 className="mb-8 grid gap-4 sm:grid-cols-2"
               >
-                <div className="relative">
-                  <label className="mb-2 block text-sm font-medium text-surface-300">
-                    Author Identity
-                  </label>
-                  <div className="relative group">
-                    <input
-                      type="text"
-                      value={metadata.author}
-                      onChange={(e) =>
-                        setMetadata({ ...metadata, author: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-white/[0.06] bg-surface-950/50 px-4 py-3 pl-10 text-white placeholder-surface-500 backdrop-blur-xl shadow-inner-glow transition-all focus:border-accent-500/50 focus:outline-none focus:ring-1 focus:ring-accent-500/50 group-hover:bg-surface-900/50"
-                      placeholder="e.g. Alice Freeman"
-                    />
-                    <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-500 transition-colors group-focus-within:text-accent-500" />
-                  </div>
-                </div>
-                <div className="relative">
-                  <label className="mb-2 block text-sm font-medium text-surface-300">
-                    AI Model / Source
-                  </label>
-                  <div className="relative group">
-                    <input
-                      type="text"
-                      value={metadata.model_used}
-                      onChange={(e) =>
-                        setMetadata({ ...metadata, model_used: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-white/[0.06] bg-surface-950/50 px-4 py-3 pl-10 text-white placeholder-surface-500 backdrop-blur-xl shadow-inner-glow transition-all focus:border-accent-500/50 focus:outline-none focus:ring-1 focus:ring-accent-500/50 group-hover:bg-surface-900/50"
-                      placeholder="e.g. V0, ChatGPT, Midjourney"
-                    />
-                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-500 transition-colors group-focus-within:text-accent-500" />
-                  </div>
-                </div>
+                <WorkspaceInput
+                  label="Author Identity"
+                  icon={Fingerprint}
+                  value={metadata.author}
+                  onChange={(val) => setMetadata({ ...metadata, author: val })}
+                  placeholder="e.g. Alice Freeman"
+                />
+                <WorkspaceInput
+                  label="AI Model / Source"
+                  icon={Sparkles}
+                  value={metadata.model_used}
+                  onChange={(val) => setMetadata({ ...metadata, model_used: val })}
+                  placeholder="e.g. V0, ChatGPT, Midjourney"
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -413,34 +395,16 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                 className="mt-6 flex flex-col items-center gap-4"
               >
                 <div className="flex w-full flex-col sm:flex-row gap-4">
-                  <div className={clsx(
-                    "flex-1 rounded-xl border p-4 transition-colors",
-                    verifyState.content ? "border-accent-500/30 bg-accent-500/5" : "border-surface-700 bg-surface-900/50"
-                  )}>
-                    <p className="text-xs font-semibold text-surface-400 mb-1">ORIGINAL CONTENT</p>
-                    {verifyState.content ? (
-                      <div className="flex items-center gap-2 text-white">
-                        <CheckCircle2 className="h-4 w-4 text-accent-500" />
-                        <span className="truncate text-sm">{verifyState.content.name}</span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-surface-500">Awaiting file...</p>
-                    )}
-                  </div>
-                  <div className={clsx(
-                    "flex-1 rounded-xl border p-4 transition-colors",
-                    verifyState.sidecar ? "border-accent-500/30 bg-accent-500/5" : "border-surface-700 bg-surface-900/50"
-                  )}>
-                    <p className="text-xs font-semibold text-surface-400 mb-1">SIGNATURE SIDECAR (.json)</p>
-                    {verifyState.sidecar ? (
-                      <div className="flex items-center gap-2 text-white">
-                        <CheckCircle2 className="h-4 w-4 text-accent-500" />
-                        <span className="truncate text-sm">{verifyState.sidecar.name}</span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-surface-500">Awaiting .originmark.json...</p>
-                    )}
-                  </div>
+                  <VerifyFileCard
+                    title="ORIGINAL CONTENT"
+                    file={verifyState.content}
+                    placeholder="Awaiting file..."
+                  />
+                  <VerifyFileCard
+                    title="SIGNATURE SIDECAR (.json)"
+                    file={verifyState.sidecar}
+                    placeholder="Awaiting .originmark.json..."
+                  />
                 </div>
 
                 <button

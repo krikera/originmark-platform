@@ -5,6 +5,11 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Github, Menu } from "lucide-react";
 
+const NAV_LINKS = [
+  { href: "#features", label: "Features" },
+  { href: "#how-it-works", label: "How it Works" },
+];
+
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -20,8 +25,11 @@ export const Navbar = () => {
           </span>
         </div>
         <div className="hidden items-center gap-8 text-sm font-medium text-surface-300 md:flex">
-          <a href="#features" className="transition-colors hover:text-accent-500">Features</a>
-          <a href="#how-it-works" className="transition-colors hover:text-accent-500">How it Works</a>
+          {NAV_LINKS.map((link) => (
+            <a key={link.href} href={link.href} className="transition-colors hover:text-accent-500">
+              {link.label}
+            </a>
+          ))}
           <a
             href="https://github.com/krikera/originmark-platform"
             target="_blank"
@@ -49,8 +57,16 @@ export const Navbar = () => {
             className="border-t border-white/[0.06] bg-surface-950 px-6 py-4 md:hidden"
           >
             <div className="flex flex-col gap-4 text-sm font-medium text-surface-300">
-              <a href="#features" className="transition-colors hover:text-accent-500" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
-              <a href="#how-it-works" className="transition-colors hover:text-accent-500" onClick={() => setIsMobileMenuOpen(false)}>How it Works</a>
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="transition-colors hover:text-accent-500"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ))}
               <a
                 href="https://github.com/krikera/originmark-platform"
                 target="_blank"

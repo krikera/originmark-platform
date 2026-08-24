@@ -2,24 +2,16 @@
 
 import { motion } from "framer-motion";
 import { Zap, Lock, Globe, Boxes, Tags, Code2 } from "lucide-react";
+import { SectionHeader } from "../ui/SectionHeader";
 
 export const FeaturesSection = () => (
   <section className="py-32 sm:py-40" id="features">
     <div className="container mx-auto max-w-6xl px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6 }}
-        className="mb-20 text-center"
-      >
-        <h2 className="font-display text-3xl font-bold text-white sm:text-5xl">
-          Why OriginMark?
-        </h2>
-        <p className="mt-6 text-surface-400 sm:text-lg max-w-2xl mx-auto">
-          Built for the AI era. From individual creators to enterprise pipelines.
-        </p>
-      </motion.div>
+      <SectionHeader 
+        title="Why OriginMark?"
+        subtitle="Built for the AI era. From individual creators to enterprise pipelines."
+        className="mb-20"
+      />
 
       <div className="grid gap-6 md:grid-cols-3 lg:gap-8">
         {[

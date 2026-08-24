@@ -2,24 +2,16 @@
 
 import { motion } from "framer-motion";
 import { Upload, FileSignature, CheckCircle2 } from "lucide-react";
+import { SectionHeader } from "../ui/SectionHeader";
 
 export const HowItWorksSection = () => (
   <section className="relative py-32 sm:py-40 bg-surface-900/50" id="how-it-works">
     <div className="container mx-auto max-w-6xl px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6 }}
-        className="mb-24 text-center"
-      >
-        <h2 className="font-display text-3xl font-bold text-white sm:text-5xl">
-          How it Works
-        </h2>
-        <p className="mt-6 text-surface-400 sm:text-lg max-w-2xl mx-auto">
-          Three simple steps to provable content authenticity.
-        </p>
-      </motion.div>
+      <SectionHeader 
+        title="How it Works"
+        subtitle="Three simple steps to provable content authenticity."
+        className="mb-24"
+      />
 
       <div className="flex flex-col gap-24 lg:gap-32">
         {[

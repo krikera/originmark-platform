@@ -80,22 +80,5 @@ export const HeroSection = ({ handleStart }: HeroSectionProps) => (
       </div>
     </div>
 
-    {/* Trust markers moved out of hero stack */}
-    <div className="border-y border-surface-800 bg-surface-900/30 py-8">
-      <div className="container mx-auto max-w-6xl px-6 flex flex-wrap justify-center gap-8 text-sm text-surface-400 lg:justify-start">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-accent-500" />
-          <span>Ed25519 Signatures</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-accent-500" />
-          <span>Tamper-proof</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-accent-500" />
-          <span>Offline Verifiable</span>
-        </div>
-      </div>
-    </div>
   </header>
 );

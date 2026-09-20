@@ -6,6 +6,7 @@ interface WorkspaceInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  id?: string;
 }
 
 export const WorkspaceInput = ({
@@ -14,20 +15,26 @@ export const WorkspaceInput = ({
   value,
   onChange,
   placeholder,
-}: WorkspaceInputProps) => (
-  <div className="relative">
-    <label className="mb-2 block text-sm font-medium text-surface-300">
-      {label}
-    </label>
-    <div className="relative group">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/[0.06] bg-surface-950/50 px-4 py-3 pl-10 text-white placeholder-surface-500 backdrop-blur-xl shadow-inner-glow transition-all focus:border-accent-500/50 focus:outline-none focus:ring-1 focus:ring-accent-500/50 group-hover:bg-surface-900/50"
-        placeholder={placeholder}
-      />
-      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-500 transition-colors group-focus-within:text-accent-500" />
+  id,
+}: WorkspaceInputProps) => {
+  const inputId = id || `input-${label.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+
+  return (
+    <div className="relative">
+      <label htmlFor={inputId} className="mb-1.5 block text-xs font-medium text-ink">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={inputId}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="text-input pl-10"
+          placeholder={placeholder}
+        />
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-mute pointer-events-none" />
+      </div>
     </div>
-  </div>
-);
+  );
+};

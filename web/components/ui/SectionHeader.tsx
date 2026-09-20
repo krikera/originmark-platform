@@ -9,16 +9,16 @@ interface SectionHeaderProps {
 
 export const SectionHeader = ({ title, subtitle, className }: SectionHeaderProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 30 }}
+    initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-100px" }}
-    transition={{ duration: 0.6 }}
-    className={clsx("text-center", className)}
+    viewport={{ once: true, margin: "-50px" }}
+    transition={{ duration: 0.5 }}
+    className={clsx("text-center max-w-2xl mx-auto", className)}
   >
-    <h2 className="font-display text-3xl font-bold text-white sm:text-5xl">
+    <h2 className="display-xl text-ink">
       {title}
     </h2>
-    <p className="mt-6 text-surface-400 sm:text-lg max-w-2xl mx-auto">
+    <p className="mt-3 text-ink-mute body-lg">
       {subtitle}
     </p>
   </motion.div>

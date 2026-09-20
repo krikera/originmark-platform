@@ -62,7 +62,7 @@ To verify the content, anyone can use the OriginMark API or web dashboard. The v
 ### The Ecosystem
 To make this accessible, OriginMark provides:
 *   **FastAPI Backend:** A robust, modular, and secure backend handling identity management (JWT/API Keys), signature metadata storage, and webhooks.
-*   **Web Dashboard:** A Next.js frontend for manual signing and verification.
-*   **(Future/In-Progress) C2PA Integration:** Mapping OriginMark signatures into the emerging industry-standard C2PA formats for broader interoperability. 
+*   **Web Dashboard:** A Next.js 16 frontend with Tailwind CSS v4 for seamless manual signing and verification.
+*   **C2PA Manifest Export:** Native export of C2PA v1.4 JSON manifests for standardized content provenance tracking and industry-standard interoperability. 
 
 OriginMark doesn't just claim authenticity; it proves it.

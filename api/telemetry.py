@@ -48,8 +48,8 @@ class TelemetryTracker:
     async def update_daily_summary(db: Session):
         """Update daily metrics summary - should be run periodically"""
         try:
-            today = date.today()
-            start_of_day = datetime.combine(today, datetime.min.time())
+            today = datetime.now(timezone.utc).date()
+            start_of_day = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
             end_of_day = start_of_day + timedelta(days=1)
             
             # Get or create today's summary

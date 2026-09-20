@@ -1,17 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-inter",
-});
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-outfit",
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -74,18 +69,18 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favi.png",
-    shortcut: "/favi.png",
-    apple: "/favi.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favi.png", type: "image/png", sizes: "128x128" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0a0e14" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0e14" },
-  ],
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -99,10 +94,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-surface-950 bg-dot-grid bg-glow-orbs antialiased">
+      <body className="min-h-screen bg-canvas text-ink antialiased selection:bg-primary selection:text-on-primary">
         {children}
       </body>
     </html>

@@ -12,11 +12,11 @@ import {
   Sparkles,
   Upload,
   Loader2,
-  ChevronDown,
   Download,
   Trash2,
   XCircle,
   CheckCircle2,
+  FileCheck,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { Mode, FileResult, SignatureResult, VerificationResult } from "../../types";
@@ -37,7 +37,10 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
   const [fileResults, setFileResults] = useState<FileResult[]>([]);
   const [metadata, setMetadata] = useState({ author: "", model_used: "" });
   const [batchMode, setBatchMode] = useState(false);
-  const [verifyState, setVerifyState] = useState<{ content: File | null; sidecar: File | null }>({ content: null, sidecar: null });
+  const [verifyState, setVerifyState] = useState<{ content: File | null; sidecar: File | null }>({
+    content: null,
+    sidecar: null,
+  });
 
   const processFile = useCallback(
     async (file: File, signatureData?: SignatureResult): Promise<SignatureResult | VerificationResult> => {
@@ -87,18 +90,17 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
       if (isBatch) setBatchMode(true);
 
       if (mode === "verify") {
-        const contentFiles = acceptedFiles.filter(f => !f.name.endsWith('.originmark.json'));
-        const sidecarFiles = acceptedFiles.filter(f => f.name.endsWith('.originmark.json'));
+        const contentFiles = acceptedFiles.filter((f) => !f.name.endsWith(".originmark.json"));
+        const sidecarFiles = acceptedFiles.filter((f) => f.name.endsWith(".originmark.json"));
 
-        setVerifyState(prev => ({
+        setVerifyState((prev) => ({
           content: contentFiles[0] || prev.content,
-          sidecar: sidecarFiles[0] || prev.sidecar
+          sidecar: sidecarFiles[0] || prev.sidecar,
         }));
         return;
       }
 
       const contentFiles = acceptedFiles;
-
       const initialResults: FileResult[] = contentFiles.map((file) => ({
         file,
         processing: true,
@@ -114,17 +116,12 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
           const result = await processFile(file, sigData);
 
           setFileResults((prev) =>
-            prev.map((item, idx) =>
-              idx === i ? { ...item, processing: false, result } : item
-            )
+            prev.map((item, idx) => (idx === i ? { ...item, processing: false, result } : item))
           );
-
         } catch (error) {
           const message = error instanceof Error ? error.message : "An error occurred";
           setFileResults((prev) =>
-            prev.map((item, idx) =>
-              idx === i ? { ...item, processing: false, error: message } : item
-            )
+            prev.map((item, idx) => (idx === i ? { ...item, processing: false, error: message } : item))
           );
         }
       }
@@ -170,28 +167,35 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
       }
 
       setFileResults([{ file: verifyState.content, processing: false, result }]);
-      toast.success("Verification complete");
+      if ("valid" in result && !result.valid) {
+        toast.error("Signature verification failed: invalid signature or tampered content.");
+      } else {
+        toast.success("Cryptographic signature verified successfully!");
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "An error occurred";
       setFileResults([{ file: verifyState.content, processing: false, error: message }]);
     } finally {
       setLoading(false);
-      // Reset state so they can do another one if they clear results, or leave it.
       setVerifyState({ content: null, sidecar: null });
     }
   }, [verifyState, processFile]);
 
-  const downloadAllResults = useCallback(() => {
+  const downloadAllResults = useCallback(async () => {
     const successfulResults = fileResults.filter(
       (item): item is FileResult & { result: SignatureResult } =>
         item.result !== undefined && !("valid" in item.result)
     );
 
-    successfulResults.forEach(({ file, result }) => {
+    for (let i = 0; i < successfulResults.length; i++) {
+      const { file, result } = successfulResults[i];
       downloadSidecar(file, result);
-    });
+      if (i < successfulResults.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    }
 
-    toast.success("All signature files downloaded!");
+    toast.success(`${successfulResults.length} signature files downloaded!`);
   }, [fileResults, downloadSidecar]);
 
   const clearResults = useCallback(() => {
@@ -205,84 +209,70 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
     accept:
       mode === "sign"
         ? {
-          "text/*": [".txt", ".md"],
-          "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
-        }
+            "text/*": [".txt", ".md"],
+            "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+          }
         : undefined,
   });
 
   return (
-    <motion.main
+    <main
       ref={mainSectionRef}
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      className="container mx-auto px-4 pb-24 pt-24 sm:px-6 lg:px-8"
+      className="border-y border-hairline-cool bg-canvas py-16 sm:py-20"
       id="main-section"
     >
-      <div className="mx-auto max-w-4xl py-12">
-        <div className="mb-12 text-center">
-          <h2 className="font-display text-3xl font-bold text-white">
-            {mode === "sign" ? "Sign Your Content" : "Verify Authenticity"}
+      <div className="mx-auto max-w-[960px] px-6">
+        <div className="mb-8 text-center">
+          <h2 className="display-lg text-ink mb-2">
+            {mode === "sign" ? "Sign Artifact" : "Verify Authenticity"}
           </h2>
-          <p className="mt-2 text-surface-400">
+          <p className="body-md text-ink-mute max-w-lg mx-auto">
             {mode === "sign"
-              ? "Upload your files to generate cryptographic signatures"
-              : "Upload files and signatures to verify their origin"}
+              ? "Generate cryptographic Ed25519 provenance signatures and metadata"
+              : "Inspect and verify content authenticity using sidecar signatures"}
           </p>
         </div>
 
-        {/* Mode Switcher */}
-        <motion.div layout className="mb-8 flex justify-center">
-          <div className="glass-card inline-flex p-1.5">
+        {/* Mode Switcher Segmented Control */}
+        <div className="mb-6 flex justify-center">
+          <div className="inline-flex rounded-sm border border-hairline bg-canvas-soft p-1">
             {(["sign", "verify"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={clsx(
-                  "relative rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-300",
+                  "flex items-center gap-2 rounded-xs px-5 py-2 text-xs font-medium transition-all duration-150 cursor-pointer",
                   mode === m
-                    ? "text-surface-950"
-                    : "text-surface-400 hover:text-white"
+                    ? "bg-canvas text-ink shadow-level-1 border border-hairline font-medium"
+                    : "text-ink-mute hover:text-ink"
                 )}
               >
-                {mode === m && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
+                {m === "sign" ? (
+                  <FileSignature className="h-3.5 w-3.5" />
+                ) : (
+                  <Shield className="h-3.5 w-3.5" />
                 )}
-                <span className="relative z-10 flex items-center gap-2">
-                  {m === "sign" ? (
-                    <FileSignature className="h-4 w-4" />
-                  ) : (
-                    <Shield className="h-4 w-4" />
-                  )}
-                  {m === "sign" ? "Sign Mode" : "Verify Mode"}
-                </span>
+                <span>{m === "sign" ? "Sign Mode" : "Verify Mode"}</span>
               </button>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Batch Toggle */}
-        <motion.div layout className="mb-6 flex justify-center">
-          <label className="glass-card flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors hover:bg-white/[0.04]">
+        <div className="mb-6 flex justify-center">
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-ink-mute hover:text-ink">
             <input
               type="checkbox"
               checked={batchMode}
               onChange={(e) => setBatchMode(e.target.checked)}
-              className="h-5 w-5 rounded-md border-surface-600 bg-surface-800 text-accent-500 focus:ring-2 focus:ring-accent-500 focus:ring-offset-0"
+              className="h-4 w-4 rounded-xs border-hairline-strong text-primary focus:ring-primary accent-primary"
             />
-            <span className="text-sm font-medium text-surface-300">
-              Batch Processing Mode
-            </span>
+            <span>Batch Processing Mode</span>
           </label>
-        </motion.div>
+        </div>
 
-        {/* Main Card */}
-        <motion.div layout className="glass-card p-8">
+        {/* Main Card Container */}
+        <div className="card-feature-light">
           {/* Metadata Fields (Sign Mode) */}
           <AnimatePresence mode="wait">
             {mode === "sign" && (
@@ -291,95 +281,70 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mb-8 grid gap-4 sm:grid-cols-2"
+                className="mb-6 grid gap-4 sm:grid-cols-2"
               >
                 <WorkspaceInput
-                  label="Author Identity"
+                  label="Author Identity / Key Holder"
                   icon={Fingerprint}
                   value={metadata.author}
                   onChange={(val) => setMetadata({ ...metadata, author: val })}
                   placeholder="e.g. Alice Freeman"
                 />
                 <WorkspaceInput
-                  label="AI Model / Source"
+                  label="AI Model / Pipeline"
                   icon={Sparkles}
                   value={metadata.model_used}
                   onChange={(val) => setMetadata({ ...metadata, model_used: val })}
-                  placeholder="e.g. V0, ChatGPT, Midjourney"
+                  placeholder="e.g. Midjourney v6.1, Claude 3.7, DALL-E"
                 />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Dropzone */}
+          {/* Technical Dropzone */}
           <div
             {...getRootProps()}
             className={clsx(
-              "relative overflow-hidden group cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300",
+              "relative cursor-pointer rounded-md border border-dashed p-10 text-center transition-all duration-150",
               isDragActive
-                ? "border-accent-500 bg-accent-500/[0.02] shadow-glow-accent"
-                : "border-white/[0.1] bg-surface-950/30 hover:border-accent-500/50 hover:bg-surface-900/30"
+                ? "border-primary bg-canvas-soft shadow-level-1"
+                : "border-hairline-strong bg-canvas-soft/50 hover:border-ink-secondary hover:bg-canvas-soft"
             )}
           >
             <input {...getInputProps()} />
 
-            {/* Scanning Laser Animation */}
-            {(isDragActive || loading) && (
-              <div className="absolute inset-0 z-0 overflow-hidden rounded-2xl pointer-events-none">
-                <div className="absolute left-0 right-0 h-0.5 bg-accent-400 shadow-[0_0_8px_2px_rgba(0,217,197,0.5)] animate-scan-line" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent-500/[0.05] to-transparent animate-scan-line" />
-              </div>
-            )}
-
-            <div className="relative z-10 space-y-4">
+            <div className="space-y-3">
               {loading ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col items-center gap-4"
-                >
-                  <div className="relative flex h-16 w-16 items-center justify-center">
-                    <Loader2 className="absolute inset-0 h-16 w-16 animate-spin text-accent-500/20" />
-                    <Shield className="h-8 w-8 text-accent-400 animate-pulse" />
-                  </div>
-                  <p className="text-sm font-mono text-accent-400 tracking-wider uppercase animate-pulse">
-                    Executing Cryptographic Operations...
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-xs font-mono text-ink tracking-wide uppercase">
+                    Computing Cryptographic Signatures...
                   </p>
-                </motion.div>
+                </div>
               ) : (
                 <>
-                  <div className={clsx(
-                    "mx-auto flex h-16 w-16 items-center justify-center rounded-2xl transition-all duration-300",
-                    isDragActive ? "bg-accent-500/20 text-accent-400 scale-110 shadow-glow" : "bg-white/[0.04] text-surface-400 group-hover:bg-accent-500/10 group-hover:text-accent-500 group-hover:scale-105"
-                  )}>
-                    <Upload className="h-8 w-8" />
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-sm border border-hairline bg-canvas text-ink">
+                    <Upload className="h-5 w-5 text-ink-mute" />
                   </div>
                   <div>
-                    <p className={clsx(
-                      "text-lg font-medium transition-colors",
-                      isDragActive ? "text-accent-400" : "text-surface-200"
-                    )}>
+                    <p className="text-sm font-medium text-ink">
                       {isDragActive
-                        ? "Drop to initialize scan..."
-                        : mode === "verify" 
-                          ? "Drag & drop file or signature here"
+                        ? "Drop files to process"
+                        : mode === "verify"
+                          ? "Drop file and its .originmark.json sidecar"
                           : batchMode
-                            ? `Drag & drop multiple files to sign`
-                            : `Drag & drop a file to sign`}
+                            ? "Drop multiple files to sign"
+                            : "Drop a file or browse from device"}
                     </p>
-                    <p className="mt-2 text-sm text-surface-500">
+                    <p className="caption text-ink-mute mt-1">
                       {mode === "sign"
-                        ? "Supported: Text, Markdown, Images, Code"
-                        : "Upload the original file and its .originmark.json signature"}
+                        ? "Supported: Images (.png, .jpg, .webp), Text (.txt, .md)"
+                        : "Requires the original artifact and the matching signature JSON"}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-surface-400 group-hover:text-accent-400 transition-colors"
-                  >
-                    <span>Browse Local Files</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
+                  <span className="inline-block button-secondary-outline text-xs mt-1">
+                    Select File
+                  </span>
                 </>
               )}
             </div>
@@ -394,11 +359,11 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                 exit={{ opacity: 0, y: -10 }}
                 className="mt-6 flex flex-col items-center gap-4"
               >
-                <div className="flex w-full flex-col sm:flex-row gap-4">
+                <div className="flex w-full flex-col sm:flex-row gap-3">
                   <VerifyFileCard
                     title="ORIGINAL CONTENT"
                     file={verifyState.content}
-                    placeholder="Awaiting file..."
+                    placeholder="Awaiting content file..."
                   />
                   <VerifyFileCard
                     title="SIGNATURE SIDECAR (.json)"
@@ -410,127 +375,127 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                 <button
                   onClick={handleVerify}
                   disabled={!verifyState.content || !verifyState.sidecar || loading}
-                  className="mt-2 flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 font-semibold text-surface-950 transition-all hover:bg-accent-400 hover:shadow-glow disabled:opacity-50 disabled:hover:shadow-none"
+                  className="button-primary-green w-full sm:w-auto px-8 disabled:opacity-50"
                 >
-                  <Shield className="h-5 w-5" />
-                  Verify Signature
+                  <FileCheck className="h-4 w-4" />
+                  <span>Verify Cryptographic Signature</span>
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Results */}
+          {/* Processed Results */}
           <AnimatePresence>
             {fileResults.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="mt-8"
+                exit={{ opacity: 0, y: -15 }}
+                className="mt-8 pt-6 border-t border-hairline"
               >
                 {/* Results Header */}
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white">
-                    Processed ({fileResults.length})
+                  <h3 className="heading-md text-ink">
+                    Processed Artifacts ({fileResults.length})
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     {mode === "sign" && fileResults.some((f) => f.result) && (
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                      <button
                         onClick={downloadAllResults}
-                        className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-accent-400"
+                        className="button-primary-green text-xs py-1.5 px-3"
                       >
-                        <Download className="h-4 w-4" />
-                        Download All
-                      </motion.button>
+                        <Download className="h-3.5 w-3.5" />
+                        <span>Download All</span>
+                      </button>
                     )}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <button
                       onClick={clearResults}
-                      className="flex items-center gap-2 rounded-lg bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:bg-surface-700"
+                      className="button-secondary-outline text-xs py-1.5 px-3"
                     >
-                      <Trash2 className="h-4 w-4" />
-                      Clear
-                    </motion.button>
+                      <Trash2 className="h-3.5 w-3.5 text-ink-mute" />
+                      <span>Clear</span>
+                    </button>
                   </div>
                 </div>
 
                 {/* Results List */}
-                <div className="max-h-96 space-y-3 overflow-y-auto scrollbar-thin">
+                <div className="max-h-96 space-y-3 overflow-y-auto scrollbar-thin pr-1">
                   {fileResults.map((fileResult, index) => (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={clsx(
-                        "result-card",
-                        fileResult.result && !fileResult.error
-                          ? "valid" in fileResult.result
-                            ? fileResult.result.valid
-                              ? "success"
-                              : "error"
-                            : "success"
-                          : fileResult.error
-                            ? "error"
-                            : ""
-                      )}
+                      className="rounded-sm border border-hairline bg-canvas p-3.5 shadow-level-1"
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5">
                           {fileResult.processing ? (
-                            <Loader2 className="h-5 w-5 animate-spin text-accent-500" />
-                          ) : fileResult.error ? (
-                            <XCircle className="h-5 w-5 text-red-400" />
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          ) : fileResult.error || (fileResult.result && "valid" in fileResult.result && !fileResult.result.valid) ? (
+                            <XCircle className="h-4 w-4 text-accent-tomato" />
                           ) : (
-                            <CheckCircle2 className="h-5 w-5 text-accent-500" />
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
                           )}
-                          <span className="font-medium truncate max-w-[200px] text-white">{fileResult.file.name}</span>
+                          <span className="font-mono text-xs font-medium text-ink truncate max-w-[240px]">
+                            {fileResult.file.name}
+                          </span>
                         </div>
+
                         <div className="flex items-center gap-2">
                           {fileResult.result && !fileResult.error && mode === "sign" && (
                             <button
-                              onClick={() => downloadSidecar(fileResult.file, fileResult.result as SignatureResult)}
-                              className="rounded bg-white/[0.04] p-1.5 text-surface-400 transition-colors hover:bg-accent-500 hover:text-white"
-                              title="Download Signature File"
+                              onClick={() =>
+                                downloadSidecar(fileResult.file, fileResult.result as SignatureResult)
+                              }
+                              className="rounded-xs border border-hairline p-1 text-ink-mute hover:text-ink hover:bg-canvas-soft transition-colors"
+                              title="Download Sidecar"
                             >
-                              <Download className="h-4 w-4" />
+                              <Download className="h-3.5 w-3.5" />
                             </button>
                           )}
+
                           {fileResult.result && !fileResult.error && (
-                            <span className="badge badge-accent">
+                            <span
+                              className={clsx(
+                                "text-[11px]",
+                                "valid" in fileResult.result && !fileResult.result.valid
+                                  ? "inline-flex items-center gap-1 rounded-full bg-accent-tomato/10 border border-accent-tomato/30 px-2 py-0.5 font-medium text-accent-tomato"
+                                  : "pill-tag-green"
+                              )}
+                            >
                               {"valid" in fileResult.result
                                 ? fileResult.result.valid
-                                  ? "Verified"
-                                  : "Failed"
-                                : "Signed"}
+                                  ? "Valid Signature"
+                                  : "Verification Failed"
+                                : "Signed with Ed25519"}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Result Details */}
+                      {/* Result Details in code-block */}
                       {fileResult.result && !fileResult.error && (
                         <TerminalResult
                           content_hash={fileResult.result.content_hash}
+                          valid={
+                            "valid" in fileResult.result ? fileResult.result.valid : undefined
+                          }
                           metadata={fileResult.result.metadata}
-                          signature={"signature" in fileResult.result ? fileResult.result.signature : undefined}
+                          signature={
+                            "signature" in fileResult.result ? fileResult.result.signature : undefined
+                          }
                         />
                       )}
 
                       {fileResult.error && (
-                        <p className="mt-2 text-sm text-red-400">{fileResult.error}</p>
+                        <p className="mt-2 text-xs font-mono text-accent-tomato">{fileResult.error}</p>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
-    </motion.main>
+    </main>
   );
 };

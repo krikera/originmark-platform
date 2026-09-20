@@ -28,6 +28,7 @@ def is_safe_url(url_str: str) -> bool:
 
 class WebhookType(str, Enum):
     SLACK = "slack"
+    DISCORD = "discord"
 
 class WebhookEvent(str, Enum):
     SIGNATURE_CREATED = "signature.created"

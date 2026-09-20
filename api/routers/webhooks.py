@@ -7,6 +7,7 @@ Endpoints:
     DELETE /webhooks/{webhook_id} — Delete a webhook (JWT or API key)
 """
 
+import json
 import uuid
 from typing import Optional
 
@@ -14,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from db import get_db
+from db import get_db, WebhookModel
 from dependencies import get_current_user_id
 from webhooks import webhook_manager, WebhookConfig, WebhookType, WebhookEvent, is_safe_url
 
@@ -53,6 +54,19 @@ async def create_webhook(
 
     webhook_manager.webhooks[webhook_id] = webhook_config
 
+    db_webhook = WebhookModel(
+        id=webhook_id,
+        name=webhook_data.name,
+        url=str(webhook_data.url),
+        type=webhook_data.type.value if hasattr(webhook_data.type, "value") else str(webhook_data.type),
+        events_json=json.dumps([e.value if hasattr(e, "value") else str(e) for e in webhook_data.events]),
+        secret=webhook_data.secret,
+        user_id=user_id,
+        is_active=True,
+    )
+    db.add(db_webhook)
+    db.commit()
+
     return {
         "message": "Webhook created successfully",
         "webhook_id": webhook_id,
@@ -64,19 +78,24 @@ async def create_webhook(
 @router.get("")
 async def list_webhooks(
     user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
     """List all webhooks for the authenticated user"""
+    db_webhooks = db.query(WebhookModel).filter(
+        WebhookModel.user_id == user_id,
+        WebhookModel.is_active == True,
+    ).all()
+
     webhooks = [
         {
             "id": webhook.id,
             "name": webhook.name,
-            "url": str(webhook.url),
+            "url": webhook.url,
             "type": webhook.type,
-            "events": webhook.events,
+            "events": json.loads(webhook.events_json) if webhook.events_json else [],
             "is_active": webhook.is_active,
         }
-        for webhook in webhook_manager.webhooks.values()
-        if webhook.user_id == user_id
+        for webhook in db_webhooks
     ]
 
     return {"webhooks": webhooks}
@@ -86,13 +105,23 @@ async def list_webhooks(
 async def delete_webhook(
     webhook_id: str,
     user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
     """Delete a webhook"""
+    db_webhook = db.query(WebhookModel).filter(WebhookModel.id == webhook_id).first()
+
+    if not db_webhook and webhook_id not in webhook_manager.webhooks:
+        raise HTTPException(status_code=404, detail="Webhook not found")
+
+    if db_webhook:
+        if db_webhook.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this webhook")
+        db.delete(db_webhook)
+        db.commit()
+
     if webhook_id in webhook_manager.webhooks:
-        webhook = webhook_manager.webhooks[webhook_id]
-        if webhook.user_id != user_id:
+        if webhook_manager.webhooks[webhook_id].user_id != user_id:
             raise HTTPException(status_code=403, detail="Not authorized to delete this webhook")
         del webhook_manager.webhooks[webhook_id]
-        return {"message": "Webhook deleted successfully"}
-    else:
-        raise HTTPException(status_code=404, detail="Webhook not found")
+
+    return {"message": "Webhook deleted successfully"}

@@ -26,7 +26,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from c2pa_export import C2PAManifestExporter
-from db import get_db, APIKey, SignatureMetadata
+from db import get_db, APIKey, SignatureMetadata, User
 from dependencies import compute_hash, get_api_key, get_optional_api_key, get_current_user_id
 from telemetry import telemetry
 from webhooks import notify_signature_created
@@ -176,7 +176,7 @@ async def export_signature_c2pa(
     api_key: Optional[APIKey] = Depends(get_optional_api_key),
     db: Session = Depends(get_db),
 ):
-    """Export existing signature as C2PA manifest"""
+    """Export existing signature as C2PA-aligned JSON manifest"""
     db_signature = db.query(SignatureMetadata).filter(SignatureMetadata.id == signature_id).first()
     if not db_signature:
         raise HTTPException(status_code=404, detail="Signature not found")
@@ -194,7 +194,7 @@ async def export_signature_c2pa(
 
     return JSONResponse(status_code=200, content={
         "format": "c2pa", "signature_id": signature_id, "manifest": c2pa_manifest, "validation": validation,
-        "export_info": {"specification": "C2PA v1.4", "exporter": "OriginMark/2.0.0", "timestamp": datetime.now(timezone.utc).isoformat(), "compatibility": "Adobe Content Authenticity Initiative"},
+        "export_info": {"specification": "C2PA v1.4", "exporter": "OriginMark/1.0.0", "timestamp": datetime.now(timezone.utc).isoformat(), "format": "C2PA v1.4 Schema-Aligned JSON Manifest"},
     })
 
 
@@ -241,12 +241,17 @@ async def verify_content(
                 user_agent=request.headers.get("user-agent"),
                 metadata={"result": "hash_mismatch", "signature_id": signature_id},
             )
-            return {"valid": False, "message": "Content hash mismatch", "computed_hash": content_hash, "stored_hash": stored_hash}
-
-        verify_key = nacl.signing.VerifyKey(base64.b64decode(public_key))
+            return {"valid": False, "message": "Content hash mismatch", "content_hash": content_hash, "computed_hash": content_hash, "stored_hash": stored_hash}
 
         try:
-            verify_key.verify(content_hash.encode(), base64.b64decode(signature))
+            pub_bytes = base64.b64decode(public_key)
+            sig_bytes = base64.b64decode(signature)
+            verify_key = nacl.signing.VerifyKey(pub_bytes)
+        except Exception as decode_err:
+            return JSONResponse(status_code=400, content={"error": f"Invalid signature or public key format: {str(decode_err)}"})
+
+        try:
+            verify_key.verify(content_hash.encode(), sig_bytes)
             metadata = None
             if signature_id and db_signature:
                 metadata = json.loads(db_signature.metadata_json) if db_signature.metadata_json else None
@@ -345,6 +350,18 @@ async def get_signature(signature_id: str, db: Session = Depends(get_db)):
     }
 
 
+def _format_signature_meta(sig: SignatureMetadata) -> dict:
+    return {
+        "id": sig.id,
+        "content_hash": sig.content_hash,
+        "author": sig.author,
+        "timestamp": sig.timestamp.isoformat(),
+        "content_type": sig.content_type,
+        "model_used": sig.ai_model_used,
+        "file_name": sig.file_name,
+    }
+
+
 @router.get("/me/signatures")
 async def get_my_signatures(
     user_id: str = Depends(get_current_user_id),
@@ -355,12 +372,24 @@ async def get_my_signatures(
         SignatureMetadata.user_id == user_id
     ).order_by(SignatureMetadata.timestamp.desc()).all()
 
-    return {
-        "signatures": [
-            {"id": sig.id, "content_hash": sig.content_hash, "author": sig.author,
-             "timestamp": sig.timestamp.isoformat(), "content_type": sig.content_type,
-             "model_used": sig.ai_model_used, "file_name": sig.file_name}
-            for sig in signatures
-        ]
-    }
+    return {"signatures": [_format_signature_meta(sig) for sig in signatures]}
+
+
+@router.get("/users/{user_id}/signatures")
+async def get_user_signatures(
+    user_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Get all signatures for the specified user."""
+    if user_id != current_user_id:
+        user = db.query(User).filter(User.id == current_user_id).first()
+        if not user or not user.is_admin:
+            raise HTTPException(status_code=403, detail="Not authorized to access another user's signatures")
+
+    signatures = db.query(SignatureMetadata).filter(
+        SignatureMetadata.user_id == user_id
+    ).order_by(SignatureMetadata.timestamp.desc()).all()
+
+    return {"signatures": [_format_signature_meta(sig) for sig in signatures]}
 

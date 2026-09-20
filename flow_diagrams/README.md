@@ -5,18 +5,20 @@ This folder contains comprehensive Mermaid diagrams showing how each component o
 ##  Available Diagrams
 
 1. **[API Architecture](01-api-architecture.md)** - Complete FastAPI backend architecture
-2. **[Web Dashboard Flow](02-web-dashboard.md)** - Next.js 15 web application flow
+2. **[Web Dashboard Flow](02-web-dashboard.md)** - Next.js 16 web application flow
 3. **[System Overview](03-system-overview.md)** - High-level system architecture
 
 ## 🛠 Technology Stack
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| Web Dashboard | Next.js + Turbopack | 15.x |
-| UI Framework | React | 18.x |
+| Web Dashboard | Next.js + Turbopack | 16.x |
+| UI Framework | React | 19.x |
+| Styling | Tailwind CSS | 4.x |
 | Animations | Framer Motion | 11.x |
-| Styling | TailwindCSS | 3.4.x |
+| Icons | Lucide React | 1.x |
 | API | FastAPI + SQLAlchemy | - |
+| Database | PostgreSQL / SQLite | 16+ / 3+ |
 
 ##  How to Use These Diagrams
 
@@ -57,11 +59,12 @@ Install the "Mermaid Markdown Syntax Highlighting" extension to view diagrams di
 - Webhook system for notifications
 
 ### 02-web-dashboard.md
-- **Next.js 15** with Turbopack
-- **Framer Motion** animations
+- **Next.js 16** with Turbopack
+- **React 19** hooks architecture
+- **Tailwind CSS v4** design tokens
 - **Sonner** toast notifications
 - **Lucide React** icons
-- Glassmorphism design
+- Minimalist canvas and hairline design
 
 ### 03-system-overview.md
 - Complete system architecture

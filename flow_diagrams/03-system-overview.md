@@ -5,7 +5,7 @@ graph TB
     subgraph "OriginMark System Overview"
         
         subgraph UserLayer["User Interfaces"]
-            WebDashboard["Web Dashboard<br/>Next.js 15 + TailwindCSS<br/>Framer Motion"]
+            WebDashboard["Web Dashboard<br/>Next.js 16 + Tailwind CSS v4<br/>Framer Motion"]
         end
         
         subgraph APILayer["API Service Layer"]
@@ -18,11 +18,10 @@ graph TB
             Ed25519Keys["Ed25519 Key Pairs<br/>Public/Private Keys"]
             DigitalSigning["Digital Signatures<br/>NaCl Implementation"]
             ContentHashing["SHA-256 Hashing<br/>Content Integrity"]
-            KeyRotation["Key Rotation<br/>Security Management"]
         end
         
         subgraph StorageLayer["Storage Layer"]
-            SQLiteDB[("SQLite Database<br/>Users, Keys, Signatures")]
+            Database[("PostgreSQL / SQLite Database<br/>Users, Keys, Signatures, Webhooks")]
             SidecarFiles["Sidecar JSON Files<br/>Portable Signatures"]
             FileSystem["File System<br/>Local Operations"]
         end
@@ -49,10 +48,10 @@ graph TB
         
         %% Crypto Layer Connections
         CryptoLayer --> SidecarFiles
-        CryptoLayer --> SQLiteDB
+        CryptoLayer --> Database
         
         %% Storage Layer Connections
-        SQLiteDB --> Authentication
+        Database --> Authentication
         SidecarFiles --> FileSystem
         
         %% Integration Layer Connections
@@ -69,7 +68,6 @@ graph TB
         subgraph SecurityBoundary["Security Perimeter"]
             CryptoLayer
             Authentication
-            KeyRotation
         end
         
         %% Local vs Remote Operations
@@ -80,16 +78,16 @@ graph TB
         
         subgraph RemoteOps["Remote Operations"]
             FastAPIServer
-            SQLiteDB
+            Database
             WebhookSystem
             ExternalServices
         end
         
         subgraph ModernStack["Modern Technology Stack"]
-            NextJS15["Next.js 15 + Turbopack"]
-            React18["React 18"]
+            NextJS16["Next.js 16 + Turbopack"]
+            React19["React 19"]
             FramerMotion["Framer Motion"]
-            Python310["Python 3.10+"]
+            Python311["Python 3.11+"]
             Node20["Node.js 20+ LTS"]
         end
     end
@@ -111,17 +109,18 @@ graph TB
 This provides a high-level view of all OriginMark components showing:
 
 ### Modern Technology Stack
-- **Next.js 15** with Turbopack for web dashboard
-- **React 18** with modern hooks
-- **Framer Motion** for animations
-- **Python 3.10+** with modern type hints
+- **Next.js 16** with Turbopack for web dashboard
+- **React 19** with modern hooks
+- **Tailwind CSS v4** styling system
+- **Framer Motion** for micro-interactions
+- **Python 3.11+** with modern type hints and FastAPI
+- **PostgreSQL / SQLite** with SQLAlchemy and Alembic
 - **Node.js 20+ LTS** runtime
 
 ### User Interfaces
-- Web Dashboard (Next.js 15 + TailwindCSS)
+- Web Dashboard (Next.js 16 + Tailwind CSS v4)
 
 ### Security Features
 - Ed25519 digital signatures
 - Content hashing (SHA-256)
-- Key rotation management
 - Rate limiting and authentication

@@ -1,83 +1,80 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Upload, FileSignature, CheckCircle2 } from "lucide-react";
+import { Upload, FileSignature, ShieldCheck, Code } from "lucide-react";
 import { SectionHeader } from "../ui/SectionHeader";
 
 export const HowItWorksSection = () => (
-  <section className="relative py-32 sm:py-40 bg-surface-900/50" id="how-it-works">
-    <div className="container mx-auto max-w-6xl px-6">
-      <SectionHeader 
-        title="How it Works"
-        subtitle="Three simple steps to provable content authenticity."
-        className="mb-24"
+  <section className="relative py-24 sm:py-32 bg-canvas" id="how-it-works">
+    <div className="mx-auto max-w-[1280px] px-6">
+      <SectionHeader
+        title="How it works"
+        subtitle="Three simple steps to generate and verify tamper-evident cryptographic proof."
+        className="mb-16 sm:mb-20"
       />
 
-      <div className="flex flex-col gap-24 lg:gap-32">
+      <div className="grid gap-8 md:grid-cols-3">
         {[
           {
             step: "01",
             icon: Upload,
-            title: "Upload Content",
+            title: "Upload Artifact",
             description:
-              "Upload any AI-generated text, image, or code artifact. Drag and drop or browse through our streamlined web interface.",
+              "Select or drop any AI-generated image, markdown text, or code artifact. OriginMark calculates the cryptographic SHA-256 hash of the content.",
+            snippet: "sha256(artifact) -> 8f9b2d...",
           },
           {
             step: "02",
             icon: FileSignature,
-            title: "Generate Signature",
+            title: "Sign with Ed25519",
             description:
-              "We compute a highly secure SHA-256 hash and sign it instantly with Ed25519, deeply embedding your provenance metadata.",
+              "Generate an Ed25519 digital signature over the content hash. Author identity and model metadata are packaged alongside the signature in a portable JSON sidecar.",
+            snippet: "ed25519.sign(hash, secretKey)",
           },
           {
             step: "03",
-            icon: CheckCircle2,
+            icon: ShieldCheck,
             title: "Verify Anywhere",
             description:
-              "Share the sidecar JSON. Anyone can verify the cryptographic signature against the original file without an account.",
+              "Distribute the .originmark.json sidecar alongside your content. Anyone can independently verify authenticity without an account or central authority.",
+            snippet: "ed25519.verify(hash, sig, pubKey)",
           },
-        ].map((item, i) => {
-          const isEven = i % 2 === 0;
-          return (
-            <motion.div
-              key={item.step}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.7 }}
-              className={`flex flex-col gap-12 lg:items-center ${
-                isEven ? "lg:flex-row" : "lg:flex-row-reverse"
-              }`}
-            >
-              {/* Text Side */}
-              <div className="flex-1 lg:px-12">
-                <div className="mb-6 text-accent-500 font-display font-bold text-xl tracking-widest">
-                  {item.step}
+        ].map((item, i) => (
+          <motion.div
+            key={item.step}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, delay: i * 0.1 }}
+            className="card-feature-light flex flex-col justify-between"
+          >
+            <div>
+              {/* Header with step pill */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-hairline bg-canvas-soft text-ink">
+                  <item.icon className="h-5 w-5 text-ink-mute" />
                 </div>
-                <h3 className="mb-4 font-display text-3xl font-bold text-white">
-                  {item.title}
-                </h3>
-                <p className="text-lg leading-relaxed text-surface-300 max-w-md">
-                  {item.description}
-                </p>
+                <span className="font-mono text-xs font-medium text-ink-mute bg-canvas-soft px-2.5 py-1 rounded-xs border border-hairline">
+                  STEP {item.step}
+                </span>
               </div>
-              
-              {/* Visual Side */}
-              <div className="flex-1">
-                <div className="aspect-[4/3] rounded-3xl border border-surface-800 bg-surface-900/30 flex items-center justify-center relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="relative flex h-32 w-32 items-center justify-center rounded-full bg-surface-800/50 border border-surface-700/50 shadow-2xl backdrop-blur-xl"
-                  >
-                    <item.icon className="h-14 w-14 text-accent-400" />
-                  </motion.div>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+
+              <h3 className="heading-lg text-ink mb-2">
+                {item.title}
+              </h3>
+
+              <p className="body-md text-ink-mute mb-6 leading-relaxed">
+                {item.description}
+              </p>
+            </div>
+
+            {/* Embedded technical code snippet */}
+            <div className="code-block text-xs font-mono py-2.5 px-3 flex items-center justify-between text-ink-mute-2">
+              <span className="text-on-dark/90 truncate">{item.snippet}</span>
+              <Code className="h-3.5 w-3.5 text-primary shrink-0 ml-2" />
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   </section>

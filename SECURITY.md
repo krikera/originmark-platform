@@ -2,7 +2,7 @@
 
 ## Reporting Issues
 
-Found a security problem? Please [open a GitHub issue](../../issues/new) with details, or submit a pull request with a fix. For sensitive security issues, you can use GitHub's private vulnerability reporting feature.
+Found a security problem? Please [open a GitHub issue](https://github.com/krikera/originmark-platform/issues/new) with details, or submit a pull request with a fix. For sensitive security issues, you can use GitHub's private vulnerability reporting feature.
 
 ## How we handle keys
 
@@ -28,4 +28,4 @@ Found a security problem? Please [open a GitHub issue](../../issues/new) with de
 
 ## Contributing
 
-Found something to improve? [Open a pull request](../../pulls) or [create an issue](../../issues/new).
+Found something to improve? [Open a pull request](https://github.com/krikera/originmark-platform/pulls) or [create an issue](https://github.com/krikera/originmark-platform/issues/new).

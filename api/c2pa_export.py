@@ -21,7 +21,7 @@ class C2PAAssertion:
 @dataclass
 class C2PAClaim:
     """Represents a C2PA claim"""
-    claim_generator: str = "OriginMark/2.0"
+    claim_generator: str = "OriginMark/1.0"
     title: str = ""
     assertions: List[Dict[str, Any]] = None
     alg: str = "es256"
@@ -83,11 +83,11 @@ class C2PAManifestExporter:
             "@context": "https://c2pa.org/specifications/1.4/context.json",
             "format": "application/c2pa",
             "version": "1.4",
-            "claim_generator": "OriginMark/2.0.0",
+            "claim_generator": "OriginMark/1.0.0",
             "claim_generator_info": [
                 {
                     "name": "OriginMark",
-                    "version": "2.0.0",
+                    "version": "1.0.0",
                     "icon": "https://originmark.dev/icon.png",
                     "description": "Digital provenance and authenticity verification"
                 }
@@ -102,14 +102,14 @@ class C2PAManifestExporter:
             }],
             "signature_info": {
                 "algorithm": "Ed25519",
-                "issuer": "OriginMark Certificate Authority"
+                "signer_type": "Ed25519 Keypair"
             },
             "originmark_metadata": {
                 "signature_id": originmark_signature.get("id"),
                 "export_version": self.version,
                 "export_timestamp": datetime.now(timezone.utc).isoformat(),
                 "verification_url": f"https://originmark.dev/verify/{originmark_signature.get('id')}",
-                "standard_compatibility": ["C2PA v1.4", "Adobe CAI"]
+                "manifest_specification": "C2PA v1.4 JSON Claim"
             }
         }
         
@@ -125,7 +125,7 @@ class C2PAManifestExporter:
             "when": timestamp,
             "softwareAgent": {
                 "name": "OriginMark",
-                "version": "2.0.0",
+                "version": "1.0.0",
                 "description": "Digital provenance and authenticity verification platform"
             },
             "digitalSourceType": "algorithmicMedia" if metadata.get("model_used") else "other"

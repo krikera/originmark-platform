@@ -42,7 +42,7 @@ graph TB
         subgraph Webhooks["Webhook Notifications"]
             Slack[Slack Integration]
             Discord[Discord Integration]
-            Events["Events:<br/>• signature.created<br/>• signature.verified<br/>• signature.failed<br/>• batch.completed"]
+            Events["Events:<br/>• signature.created"]
         end
         
         SignEP --> WebhookTrigger[Trigger Webhook]

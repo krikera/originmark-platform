@@ -26,8 +26,8 @@ uvicorn main:app --reload
 
 ```
 originmark/
-├── api/          # FastAPI backend
-└── web/          # Next.js dashboard
+├── api/          # FastAPI backend (Ed25519 signing, SQLAlchemy, JWT/API keys, Webhooks, C2PA)
+└── web/          # Next.js 16 dashboard (React 19, Tailwind CSS v4, Turbopack)
 ```
 
 ### Web Dashboard
@@ -74,11 +74,16 @@ cd web && npm install && npm run dev
 |--------|----------|-------------|
 | POST | `/auth/register` | Register new user |
 | POST | `/auth/login` | Login and get JWT token |
-| POST | `/sign` | Sign content |
-| POST | `/verify` | Verify signature |
+| POST | `/sign` | Sign content (Ed25519 or C2PA format) |
+| POST | `/verify` | Verify content and signature |
 | GET | `/badge?id=X` | Get badge HTML |
 | GET | `/signatures/{id}` | Get signature details |
+| GET | `/signatures/{id}/c2pa` | Export signature as C2PA manifest |
 | GET | `/me/signatures` | Get authenticated user's signatures |
+| GET | `/users/{user_id}/signatures` | Get signatures for a user (owner or admin) |
+| POST | `/webhooks` | Register Slack or Discord webhook |
+| GET | `/webhooks` | List user's registered webhooks |
+| DELETE | `/webhooks/{id}` | Remove a registered webhook |
 
 ## Testing
 

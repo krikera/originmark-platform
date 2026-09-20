@@ -2,9 +2,9 @@
 
 ```mermaid
 graph TB
-    subgraph "Web Dashboard Flow (Next.js 15)"
+    subgraph "Web Dashboard Flow (Next.js 16)"
         
-        UserVisit["User Visits Dashboard"] --> LoadApp["Load Next.js 15 App<br/>Turbopack Dev Server"]
+        UserVisit["User Visits Dashboard"] --> LoadApp["Load Next.js 16 App<br/>Turbopack Dev Server"]
         LoadApp --> ModeSelect{Select Mode}
         
         ModeSelect --> SignMode["Sign Content Mode"]
@@ -34,20 +34,18 @@ graph TB
         end
         
         subgraph VerifyMode["Verify Content Flow"]
-            VerifyUpload["Upload File to Verify"]
-            VerifyUpload --> SidecarCheck{Sidecar JSON?}
+            VerifyUpload["Select Content File"]
+            VerifyUpload --> SidecarCheck{Sidecar Provided?}
             
-            SidecarCheck -->|Yes| UploadSidecar["Upload Sidecar File"]
-            SidecarCheck -->|No| AutoDetect["Auto-detect Signature"]
-            
-            UploadSidecar --> ProcessVerify["Process Verification"]
-            AutoDetect --> ProcessVerify
+            SidecarCheck -->|Yes| ProcessVerify["Process Verification"]
+            SidecarCheck -->|No| AwaitSidecar["Await .originmark.json"]
+            AwaitSidecar --> ProcessVerify
             
             ProcessVerify --> APICallVerify["API Call: /verify"]
             APICallVerify --> VerifyResult["Display Verification Result"]
             
-            VerifyResult --> SuccessDisplay["Success: Show Metadata"]
-            VerifyResult --> FailureDisplay["Failure: Show Error"]
+            VerifyResult --> SuccessDisplay["Success: Valid Signature"]
+            VerifyResult --> FailureDisplay["Failure: Invalid / Tampered"]
         end
         
         subgraph UIComponents["UI Components & Features"]
@@ -71,9 +69,8 @@ graph TB
         
         subgraph BatchFeatures["Batch Processing Features"]
             ParallelUpload["Sequential File Processing"]
-            ProgressTracking["Progress Tracking per File"]
-            ResultsTable["Results Summary Table"]
-            FilterResults["Filter Success/Failed"]
+            ProgressTracking["Processing Status per File"]
+            ResultsList["Processed Results List"]
             BulkDownload["Bulk Download Actions"]
             ClearResults["Clear Results Action"]
         end
@@ -81,20 +78,18 @@ graph TB
         ProcessBatch --> BatchFeatures
         
         subgraph VerificationDisplay["Verification Display"]
-            MetadataTable["Metadata Display Table"]
-            HashDisplay["Content Hash Display"]
-            SignatureDetails["Signature Details"]
-            TrustIndicators["Trust Score Indicators"]
-            CopyToClipboard["Copy Details to Clipboard"]
+            MetadataDisplay["Metadata Terminal Display"]
+            HashDisplay["SHA-256 Hash Display"]
+            SignatureDetails["Ed25519 Signature Snippet"]
+            StatusBadge["Valid / Invalid Status Badge"]
         end
         
         VerifyResult --> VerificationDisplay
         
         subgraph APIIntegration["API Integration Layer"]
             AxiosClient["Axios HTTP Client"]
-            ErrorRetry["Automatic Retry Logic"]
-            RequestQueue["Request Queue Management"]
-            ResponseCache["Response Caching"]
+            FormDataPayload["Multipart Form Data"]
+            AsyncEndpoints["Async REST Endpoints"]
         end
         
         APICallSign --> APIIntegration
@@ -102,7 +97,7 @@ graph TB
         APICallBatchSign --> APIIntegration
         
         subgraph StateManagement["State Management"]
-            ReactState["React 18 useState Hooks"]
+            ReactState["React 19 useState Hooks"]
             FileState["File Upload State"]
             ResultsState["Results State Management"]
             UIState["UI State Control"]
@@ -111,21 +106,19 @@ graph TB
         LoadApp --> StateManagement
         
         subgraph Styling["Styling & Design System"]
-            TailwindCSS["TailwindCSS 3.4<br/>Utility Classes"]
-            GlassMorphism["Glassmorphism Cards<br/>Backdrop Blur"]
-            GradientText["Gradient Text Effects"]
-            GlowEffects["Glow Shadow Effects"]
+            TailwindCSS["Tailwind CSS v4<br/>CSS-First @theme Engine"]
+            CanvasCards["Minimalist Canvas Cards<br/>Hairline Borders"]
+            EmeraldAccent["Emerald Primary Accent<br/>Level Shadows"]
+            PillTags["Semantic Status Pills<br/>Micro-badges"]
             ResponsiveGrid["Responsive Grid Layout"]
-            DarkMode["Dark Mode Ready"]
-            CustomFonts["Google Fonts<br/>Inter + Outfit + JetBrains"]
+            CustomFonts["Google Fonts<br/>Inter + JetBrains Mono"]
         end
         
         UIComponents --> Styling
         
         subgraph ModernFonts["Typography Stack"]
-            Inter["Inter<br/>Body Text"]
-            Outfit["Outfit<br/>Display Headings"]
-            JetBrains["JetBrains Mono<br/>Code/Hashes"]
+            Inter["Inter<br/>Body & Display"]
+            JetBrains["JetBrains Mono<br/>Code/Hashes/Badges"]
         end
         
         CustomFonts --> ModernFonts
@@ -136,22 +129,20 @@ graph TB
         
         UIComponents --> Icons
         
-        subgraph Features["Advanced Features"]
-            FileTypeDetection["File Type Detection"]
-            SizeValidation["File Size Validation"]
-            FormatSupport["Multiple Format Support<br/>Text, Images, Documents"]
-            BrowserCompat["Cross-browser Compatibility"]
+        subgraph Features["Workspace Features"]
+            FormatFilter["Format Filter: Images & Text"]
+            SidecarMatching["Original Artifact + Sidecar Pairing"]
+            CrossBrowser["Cross-browser Compatibility"]
         end
         
         DropzoneSingle --> Features
         DropzoneBatch --> Features
         
         subgraph Security["Security Features"]
-            ClientSideValidation["Client-side Validation"]
-            SecureUpload["Secure File Upload"]
-            NoServerStorage["No Server File Storage"]
-            LocalProcessing["Local-first Processing"]
-            SecurityHeaders["Security Headers<br/>HSTS, CSP, XSS"]
+            ClientValidation["Metadata Field Validation"]
+            StatelessVerification["Independent Verification"]
+            EphemeralKeys["Ephemeral Key Generation"]
+            SecurityHeaders["API Security Headers"]
         end
         
         APIIntegration --> Security
@@ -172,21 +163,20 @@ graph TB
 
 ## Description
 
-This diagram demonstrates the modernized Next.js 15 web application including:
+This diagram demonstrates the modernized Next.js 16 web application including:
 
 ### Modern Stack
-- **Next.js 15** with Turbopack dev server
-- **React 18** with hooks-based state management
-- **Framer Motion** for smooth animations and transitions
+- **Next.js 16** with Turbopack dev server and React 19 compiler support
+- **React 19** with hooks-based state management
+- **Framer Motion** for micro-interactions and transitions
 - **Sonner** for modern toast notifications
 - **Lucide React** for consistent iconography
 
 ### Design System
-- **TailwindCSS 3.4** with custom theme
-- **Glassmorphism** cards with backdrop blur
-- **Gradient text** and glow effects
-- **Dark mode** ready with CSS custom properties
-- **Google Fonts**: Inter, Outfit, JetBrains Mono
+- **Tailwind CSS v4** with CSS-first `@theme` configuration
+- **Minimalist Canvas** cards with subtle hairline borders and refined shadows
+- **Emerald Green** brand accents (`#3ecf8e`) with high-contrast neutral inks
+- **Typography**: Inter (UI / Headings) and JetBrains Mono (Hashes / Code)
 
 ### Features
 - Dual-mode interface (sign/verify)

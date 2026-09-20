@@ -21,7 +21,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-import os
 
 limiter = Limiter(
     key_func=get_remote_address, 
@@ -165,18 +164,8 @@ async def get_current_user_id(
 
     # Try API key first (prefixed with om_)
     if token.startswith("om_"):
-        key_hash = hash_api_key(token)
-        db_key = (
-            db.query(APIKey)
-            .filter(APIKey.key_hash == key_hash, APIKey.is_active == True)
-            .first()
-        )
-        if not db_key:
-            raise HTTPException(status_code=401, detail="Invalid or inactive API key")
-        db_key.last_used = datetime.now(timezone.utc)
-        db_key.usage_count += 1
-        db.commit()
-        return db_key.user_id
+        api_key = await get_api_key(credentials, db)
+        return api_key.user_id
 
     # Otherwise try JWT
     payload = decode_access_token(token)

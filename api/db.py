@@ -116,6 +116,20 @@ class UserFeedback(Base):
     metadata_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
+class WebhookModel(Base):
+    __tablename__ = "webhooks"
+    
+    id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    url: Mapped[str] = mapped_column(String, nullable=False)
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    events_json: Mapped[str] = mapped_column(Text, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    secret: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    user_id: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 # Schema is managed by Alembic migrations.
 # Run: alembic upgrade head
 # To auto-create tables without migrations (dev only), uncomment:

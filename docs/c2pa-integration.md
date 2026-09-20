@@ -294,7 +294,7 @@ C2PA manifests are stored in JUMBF format and can be:
 ## Conclusion
 
 Integrating C2PA into OriginMark will:
-- Maintain OriginMark's unique features (OpenAI integration)
+- Maintain OriginMark's core provenance model (author attribution and AI model metadata)
 - Add industry-standard provenance format
 - Enable interoperability with major platforms
 - Position OriginMark as a comprehensive solution

@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, FileText } from "lucide-react";
 import { clsx } from "clsx";
 
 interface VerifyFileCardProps {
@@ -8,18 +8,27 @@ interface VerifyFileCardProps {
 }
 
 export const VerifyFileCard = ({ title, file, placeholder }: VerifyFileCardProps) => (
-  <div className={clsx(
-    "flex-1 rounded-xl border p-4 transition-colors",
-    file ? "border-accent-500/30 bg-accent-500/5" : "border-surface-700 bg-surface-900/50"
-  )}>
-    <p className="text-xs font-semibold text-surface-400 mb-1">{title}</p>
+  <div
+    className={clsx(
+      "flex-1 rounded-sm border p-3.5 transition-colors",
+      file
+        ? "border-primary/40 bg-canvas-soft"
+        : "border-hairline bg-canvas"
+    )}
+  >
+    <p className="text-[11px] font-mono font-medium text-ink-mute uppercase tracking-wider mb-1.5">
+      {title}
+    </p>
     {file ? (
-      <div className="flex items-center gap-2 text-white">
-        <CheckCircle2 className="h-4 w-4 text-accent-500" />
-        <span className="truncate text-sm">{file.name}</span>
+      <div className="flex items-center gap-2 text-ink">
+        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+        <span className="truncate text-xs font-mono font-medium">{file.name}</span>
       </div>
     ) : (
-      <p className="text-sm text-surface-500">{placeholder}</p>
+      <div className="flex items-center gap-2 text-ink-faint">
+        <FileText className="h-4 w-4 text-ink-mute-2 shrink-0" />
+        <p className="text-xs">{placeholder}</p>
+      </div>
     )}
   </div>
 );

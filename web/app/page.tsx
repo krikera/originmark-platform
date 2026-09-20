@@ -28,11 +28,11 @@ export default function Home() {
 
   const handleStart = (selectedMode: Mode) => {
     setMode(selectedMode);
-    setIsMainVisible(true);
-
-    setTimeout(() => {
-      mainSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+    if (!isMainVisible) {
+      setIsMainVisible(true);
+    } else if (mainSectionRef.current) {
+      mainSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -40,11 +40,11 @@ export default function Home() {
       <Toaster
         position="top-right"
         toastOptions={{
-          className: "!bg-surface-900 !text-white !border-surface-700",
+          className: "bg-canvas! text-ink! border-hairline! shadow-level-2! text-sm! rounded-sm!",
         }}
       />
 
-      <Navbar />
+      <Navbar onOpenWorkspace={() => handleStart("sign")} />
 
       <HeroSection handleStart={handleStart} />
 
@@ -64,7 +64,7 @@ export default function Home() {
 
       <FeaturesSection />
 
-      <Footer />
+      <Footer onOpenWorkspace={() => handleStart("sign")} />
     </div>
   );
 }

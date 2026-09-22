@@ -327,3 +327,72 @@ class TestSignVerifyRoundtrip:
         )
         assert verify_resp.status_code == 200
         assert verify_resp.json()["valid"] is True
+
+
+class TestSignBoundaries:
+    """Boundary condition tests for signing."""
+
+    def test_sign_invalid_private_key_returns_400(self, client, sample_text_content):
+        """Invalid base64 private key should return 400 Bad Request."""
+        response = client.post(
+            "/sign",
+            files={"file": ("test.txt", sample_text_content, "text/plain")},
+            data={"private_key": "not-valid-base64!?"},
+        )
+        assert response.status_code == 400
+        assert "Invalid private key format" in response.json()["error"]
+
+    def test_sign_file_too_large_returns_413(self, client):
+        """File larger than 25MB should return 413 Payload Too Large."""
+        import io
+        large_data = b"x" * (25 * 1024 * 1024 + 10)
+        response = client.post(
+            "/sign",
+            files={"file": ("large.bin", io.BytesIO(large_data), "application/octet-stream")},
+        )
+        assert response.status_code == 413
+        assert "File too large" in response.json()["detail"]
+
+
+class TestC2PAIntegration:
+    """Tests for C2PA manifest creation and export endpoints."""
+
+    def test_sign_with_c2pa_format(self, client, sample_text_content):
+        """Signing with format=c2pa returns C2PA manifest in response."""
+        response = client.post(
+            "/sign",
+            files={"file": ("artwork.png", sample_text_content, "image/png")},
+            data={"author": "Leonardo", "model_used": "DALL-E 3", "format": "c2pa"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["format"] == "c2pa"
+        assert "manifest" in data
+        assert "validation" in data
+        assert data["validation"]["valid"] is True
+
+        manifest = data["manifest"]
+        assert manifest["claim_generator"] == "OriginMark/1.0.0"
+        assert len(manifest["claim"]["assertions"]) >= 3
+        # Check required assertions
+        labels = [a["label"] for a in manifest["claim"]["assertions"]]
+        assert "c2pa.actions" in labels
+        assert "c2pa.hash.data" in labels
+        assert "org.originmark.signature" in labels
+
+    def test_export_existing_signature_as_c2pa(self, client, signed_content):
+        """Export an existing signature as C2PA JSON manifest via GET /signatures/{id}/c2pa."""
+        sig_id = signed_content["id"]
+        response = client.get(f"/signatures/{sig_id}/c2pa")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["format"] == "c2pa"
+        assert data["signature_id"] == sig_id
+        assert data["validation"]["valid"] is True
+        assert data["manifest"]["originmark_metadata"]["signature_id"] == sig_id
+
+    def test_export_nonexistent_signature_c2pa_returns_404(self, client):
+        """C2PA export for nonexistent signature returns 404."""
+        response = client.get("/signatures/nonexistent-uuid-c2pa/c2pa")
+        assert response.status_code == 404
+

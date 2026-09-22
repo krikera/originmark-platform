@@ -69,7 +69,10 @@ async def sign_content(
             return JSONResponse(status_code=400, content={"error": "No content provided"})
 
         if private_key:
-            signing_key = nacl.signing.SigningKey(base64.b64decode(private_key))
+            try:
+                signing_key = nacl.signing.SigningKey(base64.b64decode(private_key))
+            except Exception as decode_err:
+                return JSONResponse(status_code=400, content={"error": f"Invalid private key format: {str(decode_err)}"})
         else:
             signing_key = nacl.signing.SigningKey.generate()
 
@@ -155,6 +158,8 @@ async def sign_content(
 
         return signature_response
 
+    except HTTPException:
+        raise
     except Exception as e:
         response_time_ms = int((time.time() - start_time) * 1000)
         await telemetry.track_usage(
@@ -277,6 +282,8 @@ async def verify_content(
             )
             return {"valid": False, "message": "Invalid signature", "content_hash": content_hash}
 
+    except HTTPException:
+        raise
     except Exception as e:
         response_time_ms = int((time.time() - start_time) * 1000)
         await telemetry.track_usage(

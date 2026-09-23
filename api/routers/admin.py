@@ -72,7 +72,7 @@ async def submit_feedback(
             rating=rating,
             page_url=page_url,
             metadata={
-                "api_version": "1.0.0",
+                "api_version": "0.1.0",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )

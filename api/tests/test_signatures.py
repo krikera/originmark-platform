@@ -372,7 +372,7 @@ class TestC2PAIntegration:
         assert data["validation"]["valid"] is True
 
         manifest = data["manifest"]
-        assert manifest["claim_generator"] == "OriginMark/1.0.0"
+        assert manifest["claim_generator"] == "OriginMark/0.1.0"
         assert len(manifest["claim"]["assertions"]) >= 3
         # Check required assertions
         labels = [a["label"] for a in manifest["claim"]["assertions"]]

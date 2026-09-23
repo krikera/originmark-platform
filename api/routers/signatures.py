@@ -199,7 +199,7 @@ async def export_signature_c2pa(
 
     return JSONResponse(status_code=200, content={
         "format": "c2pa", "signature_id": signature_id, "manifest": c2pa_manifest, "validation": validation,
-        "export_info": {"specification": "C2PA v1.4", "exporter": "OriginMark/1.0.0", "timestamp": datetime.now(timezone.utc).isoformat(), "format": "C2PA v1.4 Schema-Aligned JSON Manifest"},
+        "export_info": {"specification": "C2PA v1.4", "exporter": "OriginMark/0.1.0", "timestamp": datetime.now(timezone.utc).isoformat(), "format": "C2PA v1.4 Schema-Aligned JSON Manifest"},
     })
 
 

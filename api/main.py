@@ -16,7 +16,7 @@ from slowapi.errors import RateLimitExceeded
 from routers import auth, signatures, webhooks, admin
 from dependencies import limiter
 
-app = FastAPI(title="OriginMark API", version="1.0.0")
+app = FastAPI(title="OriginMark API", version="0.1.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

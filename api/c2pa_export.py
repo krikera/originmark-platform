@@ -83,11 +83,11 @@ class C2PAManifestExporter:
             "@context": "https://c2pa.org/specifications/1.4/context.json",
             "format": "application/c2pa",
             "version": "1.4",
-            "claim_generator": "OriginMark/1.0.0",
+            "claim_generator": "OriginMark/0.1.0",
             "claim_generator_info": [
                 {
                     "name": "OriginMark",
-                    "version": "1.0.0",
+                    "version": "0.1.0",
                     "icon": "https://originmark.dev/icon.png",
                     "description": "Digital provenance and authenticity verification"
                 }
@@ -125,7 +125,7 @@ class C2PAManifestExporter:
             "when": timestamp,
             "softwareAgent": {
                 "name": "OriginMark",
-                "version": "1.0.0",
+                "version": "0.1.0",
                 "description": "Digital provenance and authenticity verification platform"
             },
             "digitalSourceType": "algorithmicMedia" if metadata.get("model_used") else "other"

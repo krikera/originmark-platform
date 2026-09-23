@@ -41,7 +41,7 @@ jobs:
         run: bandit -c .bandit.yml -r .
 
       - name: Dependency vulnerability audit (pip-audit)
-        run: pip-audit
+        run: pip-audit -r requirements.txt
 
       - name: Run test suite with pytest
         run: pytest -v

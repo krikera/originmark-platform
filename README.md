@@ -1,52 +1,95 @@
 # OriginMark
 
-Cryptographic signing and verification for AI-generated content. Uses Ed25519 signatures.
+Cryptographic signing and verification for AI-generated content using Ed25519 signatures and C2PA provenance manifests.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/krikera/originmark-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/krikera/originmark-platform/actions)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
+---
 
 ## What it does
 
-OriginMark lets you prove that content (text, images, etc.) came from a specific source and hasn't been tampered with. Think of it like a digital wax seal for AI outputs.
+OriginMark lets you prove that content (text, images, media) originated from a specific source and has not been altered or tampered with. Think of it like a digital wax seal for AI outputs.
 
-**The problem:** Anyone can claim AI wrote something, or that they wrote something AI actually made. There's no easy way to prove either.
+* **The Problem**: Anyone can claim AI wrote something, or conversely that they authored something an AI model actually produced. There is rarely an open, mathematically provable way to verify authenticity.
+* **The Solution**: Sign content cryptographically using Ed25519 public-key cryptography. Distribute the cryptographic signature alongside the media in lightweight portable sidecars or industry-standard C2PA v1.4 manifests. Verify integrity anywhere, anytime, without vendor lock-in.
 
-**The solution:** Sign content with a cryptographic key. Verify signatures anywhere, anytime.
+---
 
 ## Quick Start
 
-```bash
-# Clone and set up
-git clone https://github.com/krikera/originmark-platform
-cd originmark
+### 1. Backend API (FastAPI)
 
-# Run the API
-cd api && pip install -r requirements.txt
+```bash
+# Clone the repository
+git clone https://github.com/krikera/originmark-platform.git
+cd originmark-platform
+
+# Install dependencies and start the API
+cd api
+pip install -r requirements.txt
 uvicorn main:app --reload
 ```
+The API interactive documentation will be hosted at `http://localhost:8000/docs`.
 
-## Components
-
-```
-originmark/
-├── api/          # FastAPI backend (Ed25519 signing, SQLAlchemy, JWT/API keys, Webhooks, C2PA)
-└── web/          # Next.js 16 dashboard (React 19, Tailwind CSS v4, Turbopack)
-```
-
-### Web Dashboard
+### 2. Web Dashboard (Next.js 16)
 
 ```bash
-cd web && npm install && npm run dev
-# Open http://localhost:3000
+# From the repository root
+cd web
+npm install
+npm run dev
+```
+Open `http://localhost:3000` in your browser.
+
+---
+
+## Architecture & How It Works
+
+### Flow & System Overview
+
+```mermaid
+graph TB
+    subgraph UserLayer["User Interfaces"]
+        WebDashboard["Web Dashboard<br/>Next.js 16 + Tailwind CSS v4"]
+        ClientApps["API Consumers / CLI<br/>Programmatic om_ Keys"]
+    end
+    
+    subgraph APILayer["API Service Layer (FastAPI)"]
+        FastAPIServer["FastAPI Application"]
+        AuthSystem["JWT & API Key Auth"]
+        RateLimiter["Rate Limiting"]
+    end
+    
+    subgraph CryptoLayer["Cryptographic Engine"]
+        Ed25519["Ed25519 Signatures (PyNaCl)"]
+        SHA256["SHA-256 Content Hashing"]
+    end
+    
+    subgraph OutputLayer["Provenance Artifacts"]
+        Sidecar[".originmark.json Sidecar"]
+        C2PAManifest["C2PA v1.4 Manifest"]
+        Webhooks["Slack / Discord Webhooks"]
+    end
+
+    WebDashboard --> FastAPIServer
+    ClientApps --> FastAPIServer
+    FastAPIServer --> AuthSystem
+    FastAPIServer --> RateLimiter
+    FastAPIServer --> CryptoLayer
+    CryptoLayer --> OutputLayer
 ```
 
+### Signing and Verification Lifecycle
 
+1. **Hashing**: The binary content of the target file is hashed using SHA-256.
+2. **Signing**: The resulting hash is signed using an Ed25519 private key (ephemeral or client-supplied).
+3. **Sidecar Generation**: The signature, public key, timestamp, and optional AI model metadata are emitted as a `.originmark.json` sidecar.
+4. **C2PA Manifest**: Optionally exportable as a standardized C2PA v1.4 claim generator manifest.
+5. **Independent Verification**: Anyone holding the original asset and the sidecar can re-hash the file and mathematically verify the signature against the public key without needing private keys or centralized authority.
 
-## How it works
-
-1. Content gets hashed (SHA-256)
-2. Hash gets signed with Ed25519 private key
-3. Signature + public key + metadata saved as `.originmark.json` sidecar
-4. Anyone can verify using just the sidecar file
-
-### Sidecar format
+### Sidecar Format (`.originmark.json`)
 
 ```json
 {
@@ -54,51 +97,81 @@ cd web && npm install && npm run dev
   "content_hash": "sha256...",
   "signature": "base64...",
   "public_key": "base64...",
-  "timestamp": "2025-01-15T10:30:00Z",
+  "timestamp": "2026-09-23T10:30:00Z",
   "metadata": {
-    "author": "John",
+    "author": "John Doe",
     "model_used": "GPT-4"
   }
 }
 ```
 
-## Security
-
-- Private keys are never stored on our servers (generated ephemerally or passed by you)
-- Ed25519 signatures (same as Signal, SSH)
-- Open source, audit the code yourself
+---
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | Login and get JWT token |
-| POST | `/sign` | Sign content (Ed25519 or C2PA format) |
-| POST | `/verify` | Verify content and signature |
-| GET | `/badge?id=X` | Get badge HTML |
-| GET | `/signatures/{id}` | Get signature details |
-| GET | `/signatures/{id}/c2pa` | Export signature as C2PA manifest |
-| GET | `/me/signatures` | Get authenticated user's signatures |
-| GET | `/users/{user_id}/signatures` | Get signatures for a user (owner or admin) |
-| POST | `/webhooks` | Register Slack or Discord webhook |
-| GET | `/webhooks` | List user's registered webhooks |
-| DELETE | `/webhooks/{id}` | Remove a registered webhook |
+|---|---|---|
+| `POST` | `/auth/register` | Register new user account |
+| `POST` | `/auth/login` | Authenticate and obtain JWT access token |
+| `POST` | `/auth/api-keys` | Generate programmatic `om_` API key |
+| `POST` | `/sign` | Sign content (Ed25519 or C2PA manifest format) |
+| `POST` | `/verify` | Verify content and validate signature integrity |
+| `GET` | `/badge?id=X` | Retrieve SVG / HTML verification badge |
+| `GET` | `/signatures/{id}` | Retrieve public signature metadata |
+| `GET` | `/signatures/{id}/c2pa` | Export signature as C2PA v1.4 JSON manifest |
+| `GET` | `/me/signatures` | List authenticated user's signatures |
+| `POST` | `/webhooks` | Register Slack or Discord notification webhook |
+| `GET` | `/webhooks` | List user's registered webhooks |
+| `DELETE` | `/webhooks/{id}` | Remove a registered webhook |
+
+---
+
+## Documentation
+
+* **[Developer Guide](docs/DEVELOPER_GUIDE.md)**: Deep dive into API design, authentication modes, database migrations (Alembic), and schema specifications.
+* **[C2PA Integration Guide](docs/c2pa-integration.md)**: C2PA claim architecture, assertions, and manifest schemas.
+* **[Flow Diagrams](flow_diagrams/)**: Detailed visual diagrams covering API architecture, frontend components, and data pipelines.
+
+---
 
 ## Testing
 
 ```bash
-# API test
-curl -X POST "http://localhost:8000/sign" \
-  -F "file=@test.txt" \
-  -F "author=Test" \
-  -F "model_used=GPT-4"
+# Run backend pytest test suite
+cd api && pytest
+
+# Run frontend typecheck and linter checks
+cd ../web && npm test
 ```
+
+---
+
+## Feedback, Issues & Discussions
+
+We welcome feedback, questions, and feature suggestions:
+* **Bug Reports**: If you encounter an unexpected issue, please [open a Bug Report](https://github.com/krikera/originmark-platform/issues/new?template=bug_report.yml).
+* **Feature Requests**: Have an idea for improvement? Propose it in a [Feature Request](https://github.com/krikera/originmark-platform/issues/new?template=feature_request.yml).
+* **Discussions**: For general questions, community support, or architectural ideas, visit [GitHub Discussions](https://github.com/krikera/originmark-platform/discussions).
+
+---
+
+## Security
+
+OriginMark follows strict cryptographic and data privacy principles:
+* **Private Key Custody**: Private keys are never stored on our servers.
+* **Encryption & Hashing**: Ed25519, SHA-256, and bcrypt for password storage.
+* **Vulnerability Reporting**: Please report vulnerabilities confidentially via [GitHub Private Vulnerability Reporting](https://github.com/krikera/originmark-platform/security/advisories) or email [security@originmark.dev](mailto:security@originmark.dev). Review our [Security Policy](SECURITY.md) for SLAs and supported versions.
+
+---
 
 ## Contributing
 
-PRs welcome. Fork, branch, commit, push, open PR.
+Contributions make open-source projects thrive! Please read our [Contributing Guidelines](CONTRIBUTING.md) to learn how to set up your environment, follow our testing policy, and submit pull requests.
+
+All participants are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+---
 
 ## License
 
-MIT
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.

@@ -15,8 +15,10 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://originmark-platform.vercel.app";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://originmark.dev"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "OriginMark - Digital Signature Verification for AI Content",
     template: "%s | OriginMark",
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://originmark.dev",
+    url: siteUrl,
     siteName: "OriginMark",
     title: "OriginMark - Digital Signature Verification for AI Content",
     description:

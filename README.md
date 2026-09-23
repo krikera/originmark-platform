@@ -193,12 +193,16 @@ We welcome feedback, questions, and feature suggestions:
 
 ---
 
-## Security
+## Security & Standards Compliance
 
-OriginMark follows strict cryptographic and data privacy principles:
+OriginMark adheres to strict cryptographic rigor, data privacy principles, and OpenSSF standards:
+* **OpenSSF Best Practices**: Certified [Passing Level](https://www.bestpractices.dev/projects/14771) and self-certified to **OSPS Baseline Level 3**.
+* **Threat Modeling & Assessment**: Structured attack surface and threat model documented in [docs/SECURITY_ASSESSMENT.md](docs/SECURITY_ASSESSMENT.md).
+* **Release Provenance & Verification**: Releases are cryptographically attested via Sigstore SLSA provenance, `SHA256SUMS`, and CycloneDX SBOMs. See [docs/RELEASE_VERIFICATION.md](docs/RELEASE_VERIFICATION.md).
+* **Vulnerability Transparency (OpenVEX)**: Component exploitability assessments maintained in [docs/VEX.json](docs/VEX.json).
 * **Private Key Custody**: Private keys are never stored on our servers.
 * **Encryption & Hashing**: Ed25519, SHA-256, and bcrypt for password storage.
-* **Vulnerability Reporting**: Please report vulnerabilities confidentially via [GitHub Private Vulnerability Reporting](https://github.com/krikera/originmark-platform/security/advisories). Review our [Security Policy](SECURITY.md) for SLAs and supported versions.
+* **Vulnerability Reporting**: Report vulnerabilities confidentially via [GitHub Private Vulnerability Reporting](https://github.com/krikera/originmark-platform/security/advisories). Review our [Security Policy](SECURITY.md) for SLAs and supported versions.
 
 ---
 

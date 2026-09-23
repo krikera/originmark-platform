@@ -1,3 +1,18 @@
+[project]
+name = "originmark-api"
+version = "0.1.0"
+description = "Cryptographic signing and verification for AI-generated content using Ed25519 signatures and C2PA provenance manifests."
+readme = "../README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "OriginMark Authors" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security :: Cryptography",
+]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100

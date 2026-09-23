@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Standard PEP 621 `[project]` metadata table in `api/pyproject.toml` with explicit MIT license declaration and classifiers.
+- Automated dependency vulnerability scanning (`pip-audit` and `npm audit`) in GitHub Actions CI workflow.
+- Explicit community issue response and triage Service Level Agreements (SLAs) in `SUPPORT.md`.
 - Dedicated community support guidelines in `SUPPORT.md` completing GitHub community standards.
 - Static code analysis (`ruff`) and vulnerability scanning (`bandit`) integrated into backend CI workflow.
 - Architecture and end-to-end cryptographic signing sequence diagrams embedded in `README.md`.

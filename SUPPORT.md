@@ -45,6 +45,12 @@ Please **do NOT** report security vulnerabilities via public GitHub issues.
 
 ---
 
-## 5. Support Expectations
+## 5. Support Expectations & Community Triage SLA
 
-OriginMark is an open-source project maintained by its community. While maintainers endeavor to triage issues and respond to discussions promptly, response times may vary. Critical security reports are prioritized and acknowledged according to the SLAs outlined in our [Security Policy](SECURITY.md).
+OriginMark is committed to responsive and transparent project maintenance. We observe the following triage and response Service Level Agreements (SLAs):
+
+* **Bug Reports**: Maintainers review, verify, and acknowledge incoming bug reports within **3 to 5 business days**.
+* **Feature Requests & Enhancements**: Proposals receive maintainer feedback and viability assessment within **7 business days**.
+* **Security Vulnerabilities**: Initial acknowledgement within **48 hours** and a full remediation plan within **14 days**, as defined in our [Security Policy](SECURITY.md).
+* **Weekly Triage Cadence**: Maintainers hold a regular weekly triage session to label, prioritize, and assign newly submitted community issues and pull requests.
+* **Discussion Engagement**: [GitHub Discussions](https://github.com/krikera/originmark-platform/discussions) is monitored by maintainers and community ambassadors for general inquiries and technical architecture conversations.

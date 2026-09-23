@@ -134,3 +134,23 @@ The API relies on `pytest` and `pytest-asyncio`.
 - All dependencies injected via FastAPI `Depends()`.
 - Circular imports mitigated by centralizing logic in `dependencies.py`.
 - No raw cryptographic operations in routers; defer to `nacl` bindings and `dependencies.py` utility functions.
+
+---
+
+## 7. Dependency Selection, Acquisition & Tracking Policy
+
+OriginMark enforces rigorous dependency governance to minimize supply-chain risk:
+
+### Selection Criteria
+* **Minimal Footprint**: Avoid introducing packages for tasks solvable with standard library modules.
+* **Cryptographic Rigor**: Core cryptography is restricted strictly to audited, industry-standard libraries (`PyNaCl`/`libsodium`).
+* **Active Maintenance & Security Track Record**: Dependencies must show active maintenance, responsive security patching, and comprehensive test suites.
+* **License Compatibility**: All dependencies must be licensed under OSI-approved permissive licenses (MIT, Apache 2.0, BSD).
+
+### Acquisition & Pinning
+* **Python**: Ingested strictly from official PyPI repositories via `pip` and declared with pinned versions in `api/requirements.txt` and PEP 621 metadata in `api/pyproject.toml`.
+* **Frontend**: Ingested strictly from the official npmjs registry via `npm ci` using the committed `web/package-lock.json` lockfile.
+
+### Continuous Tracking & Auditing
+* **Automated CI Scans**: Every push and pull request triggers automated dependency vulnerability audits using `pip-audit` (PyPA advisory database) and `npm audit --audit-level=high`.
+* **Dependency Monitoring**: Critical advisories trigger immediate triage and patch release within the SLAs defined in [SECURITY.md](../SECURITY.md).

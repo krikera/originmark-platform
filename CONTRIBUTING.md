@@ -65,6 +65,15 @@ We encourage the [Conventional Commits](https://www.conventionalcommits.org/en/v
 * `test: add unit tests for webhook signature generation`
 * `chore: update dependencies`
 
+### Developer Certificate of Origin (DCO)
+To ensure all contributions are legally authorized and compatible with our MIT License, OriginMark requires contributors to assert the [Developer Certificate of Origin (DCO 1.1)](https://developercertificate.org/) on all commits.
+
+Sign off your commits by using the `-s` flag:
+```bash
+git commit -s -m "feat: implement signature caching"
+```
+This adds a `Signed-off-by: Your Name <your.email@example.com>` trailer to your commit message, certifying that you wrote or have the right to submit the code under the project's license.
+
 ---
 
 ## Testing Policy (Mandatory)

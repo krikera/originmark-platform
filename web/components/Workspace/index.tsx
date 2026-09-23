@@ -26,6 +26,46 @@ import { VerifyFileCard } from "../ui/VerifyFileCard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+/**
+ * Detects whether a file is an OriginMark signature sidecar (.originmark.json or JSON with signature data).
+ */
+async function isSignatureSidecar(file: File, isContentSet: boolean): Promise<boolean> {
+  const name = file.name.toLowerCase();
+
+  // Pattern 1: Matches originmark sidecar naming (including browser duplicate downloads like .originmark (1).json)
+  if (name.includes("originmark") && name.endsWith(".json")) {
+    return true;
+  }
+
+  // Pattern 2: Inspect JSON contents for cryptographic signature structure
+  if (name.endsWith(".json") || file.type === "application/json") {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        typeof parsed.signature === "string" &&
+        (typeof parsed.public_key === "string" ||
+          typeof parsed.content_hash === "string" ||
+          typeof parsed.id === "string")
+      ) {
+        return true;
+      }
+    } catch {
+      // not parseable JSON or read error
+    }
+
+    // Pattern 3: If content slot is already set to an artifact and user drops a .json file,
+    // it was clearly intended as the signature sidecar.
+    if (isContentSet) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 interface WorkspaceProps {
   mode: Mode;
   setMode: (mode: Mode) => void;
@@ -41,6 +81,28 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
     content: null,
     sidecar: null,
   });
+
+  const handleContentSelect = useCallback((file: File) => {
+    setVerifyState((prev) => ({ ...prev, content: file }));
+    toast.success(`Content artifact selected: ${file.name}`);
+  }, []);
+
+  const handleSidecarSelect = useCallback(async (file: File) => {
+    const isSidecar = await isSignatureSidecar(file, true);
+    if (!isSidecar && !file.name.toLowerCase().endsWith(".json")) {
+      toast.warning("Selected file does not appear to be a JSON signature sidecar.");
+    }
+    setVerifyState((prev) => ({ ...prev, sidecar: file }));
+    toast.success(`Signature sidecar selected: ${file.name}`);
+  }, []);
+
+  const handleClearContent = useCallback(() => {
+    setVerifyState((prev) => ({ ...prev, content: null }));
+  }, []);
+
+  const handleClearSidecar = useCallback(() => {
+    setVerifyState((prev) => ({ ...prev, sidecar: null }));
+  }, []);
 
   const processFile = useCallback(
     async (file: File, signatureData?: SignatureResult): Promise<SignatureResult | VerificationResult> => {
@@ -90,13 +152,70 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
       if (isBatch) setBatchMode(true);
 
       if (mode === "verify") {
-        const contentFiles = acceptedFiles.filter((f) => !f.name.endsWith(".originmark.json"));
-        const sidecarFiles = acceptedFiles.filter((f) => f.name.endsWith(".originmark.json"));
+        const isContentSet = Boolean(verifyState.content);
 
-        setVerifyState((prev) => ({
-          content: contentFiles[0] || prev.content,
-          sidecar: sidecarFiles[0] || prev.sidecar,
-        }));
+        // Classify each file asynchronously
+        const classified = await Promise.all(
+          acceptedFiles.map(async (file) => ({
+            file,
+            isSidecar: await isSignatureSidecar(file, isContentSet),
+          }))
+        );
+
+        let newSidecar: File | null = null;
+        let newContent: File | null = null;
+
+        if (classified.length >= 2) {
+          const sidecarItem = classified.find((c) => c.isSidecar);
+          const contentItem = classified.find((c) => !c.isSidecar);
+
+          if (sidecarItem && contentItem) {
+            newSidecar = sidecarItem.file;
+            newContent = contentItem.file;
+          } else {
+            // Fallback: check by .json extension
+            const jsonItem = classified.find((c) => c.file.name.toLowerCase().endsWith(".json"));
+            const nonJsonItem = classified.find((c) => !c.file.name.toLowerCase().endsWith(".json"));
+            if (jsonItem && nonJsonItem) {
+              newSidecar = jsonItem.file;
+              newContent = nonJsonItem.file;
+            } else {
+              newContent = classified[0].file;
+              newSidecar = classified[1].file;
+            }
+          }
+        } else if (classified.length === 1) {
+          const item = classified[0];
+          if (item.isSidecar) {
+            newSidecar = item.file;
+          } else {
+            newContent = item.file;
+          }
+        }
+
+        setVerifyState((prev) => {
+          const updatedContent = newContent || prev.content;
+          const updatedSidecar = newSidecar || prev.sidecar;
+
+          if (newContent && !newSidecar && prev.content && newContent.name !== prev.content.name) {
+            toast.info(`Updated content artifact to ${newContent.name}`);
+          } else if (newContent && !prev.content) {
+            toast.success(`Content artifact staged: ${newContent.name}`);
+          }
+
+          if (newSidecar && !newContent && prev.sidecar && newSidecar.name !== prev.sidecar.name) {
+            toast.info(`Updated signature sidecar to ${newSidecar.name}`);
+          } else if (newSidecar && !prev.sidecar) {
+            toast.success(`Signature sidecar staged: ${newSidecar.name}`);
+          } else if (newContent && newSidecar) {
+            toast.success("Both artifact and signature sidecar staged for verification!");
+          }
+
+          return {
+            content: updatedContent,
+            sidecar: updatedSidecar,
+          };
+        });
         return;
       }
 
@@ -133,7 +252,7 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
         toast.success(`${successCount} file${successCount > 1 ? "s" : ""} signed successfully!`);
       }
     },
-    [batchMode, mode, processFile, metadata.author, metadata.model_used]
+    [batchMode, mode, processFile, metadata.author, metadata.model_used, verifyState]
   );
 
   const handleVerify = useCallback(async () => {
@@ -155,7 +274,13 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
       try {
         sigData = JSON.parse(sidecarText) as SignatureResult;
       } catch {
-        throw new Error("Invalid signature file format.");
+        throw new Error("Invalid signature file format. Expected a valid JSON file.");
+      }
+
+      if (!sigData || typeof sigData !== "object" || !sigData.signature || !sigData.public_key) {
+        throw new Error(
+          "Invalid signature sidecar: missing required 'signature' or 'public_key' fields."
+        );
       }
 
       const result = await processFile(verifyState.content, sigData);
@@ -331,7 +456,13 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                       {isDragActive
                         ? "Drop files to process"
                         : mode === "verify"
-                          ? "Drop file and its .originmark.json sidecar"
+                          ? verifyState.content && !verifyState.sidecar
+                            ? "Drop or select the matching .originmark.json sidecar"
+                            : !verifyState.content && verifyState.sidecar
+                              ? "Drop or select the original content artifact"
+                              : verifyState.content && verifyState.sidecar
+                                ? "Both files staged — drop new files to replace"
+                                : "Drop file and its .originmark.json sidecar"
                           : batchMode
                             ? "Drop multiple files to sign"
                             : "Drop a file or browse from device"}
@@ -339,7 +470,11 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                     <p className="caption text-ink-mute mt-1">
                       {mode === "sign"
                         ? "Supported: Images (.png, .jpg, .webp), Text (.txt, .md)"
-                        : "Requires the original artifact and the matching signature JSON"}
+                        : mode === "verify" && verifyState.content && !verifyState.sidecar
+                          ? `Ready to verify ${verifyState.content.name}. Please supply the signature JSON.`
+                          : mode === "verify" && !verifyState.content && verifyState.sidecar
+                            ? `Ready with signature ${verifyState.sidecar.name}. Please supply the original artifact.`
+                            : "Requires the original artifact and matching signature JSON (drop together or individually)"}
                     </p>
                   </div>
                   <span className="inline-block button-secondary-outline text-xs mt-1">
@@ -364,11 +499,16 @@ export const Workspace = ({ mode, setMode, mainSectionRef }: WorkspaceProps) => 
                     title="ORIGINAL CONTENT"
                     file={verifyState.content}
                     placeholder="Awaiting content file..."
+                    onFileSelect={handleContentSelect}
+                    onRemove={handleClearContent}
                   />
                   <VerifyFileCard
                     title="SIGNATURE SIDECAR (.json)"
                     file={verifyState.sidecar}
                     placeholder="Awaiting .originmark.json..."
+                    accept=".json,application/json"
+                    onFileSelect={handleSidecarSelect}
+                    onRemove={handleClearSidecar}
                   />
                 </div>
 

@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   sign-release:
-    name: Generate Hashes & Cryptographic Attestations
+    name: Generate Hashes, SBOM & Cryptographic Attestations
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,12 @@ jobs:
         run: |
           mkdir -p dist
           git archive --format=tar.gz --prefix=originmark-${{ github.ref_name }}/ -o dist/originmark-${{ github.ref_name }}.tar.gz HEAD
+
+      - name: Generate Software Bill of Materials (SBOM)
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: dist/sbom.cyclonedx.json
 
       - name: Generate SHA-256 Checksums
         run: |

@@ -1,0 +1,23 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://originmark-platform.vercel.app/docs/vex/originmark-vex-0.1.0.json",
+  "author": "OriginMark Security Team",
+  "role": "Project Maintainer",
+  "timestamp": "2026-09-23T12:00:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2024-0000-EXAMPLE"
+      },
+      "products": [
+        {
+          "@id": "pkg:pypi/originmark-api@0.1.0"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "OriginMark does not utilize the affected vulnerable submodule or interface in this dependency."
+    }
+  ]
+}

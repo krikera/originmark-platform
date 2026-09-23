@@ -13,6 +13,8 @@ Only the latest active release branch receives security updates and bug fixes:
 | 0.1.x   | :white_check_mark: |
 | < 0.1.0 | :x:                |
 
+Versions `< 0.1.0` are End-of-Life (EOL) and no longer receive security updates.
+
 ---
 
 ## Reporting a Vulnerability
@@ -46,6 +48,33 @@ We adhere to the OpenSSF Best Practices vulnerability reporting requirements:
 * **Password Storage**: User passwords are stored using salted `bcrypt` hashes with computational work factors.
 * **API Keys**: Programmatic `om_` API keys are hashed with SHA-256 before database storage; raw keys are shown once upon creation and validated via constant-time comparisons.
 * **Transport Encryption**: TLS 1.2+ required across all API endpoints.
+
+---
+
+## Secrets & Credentials Management Policy
+
+* **Storage**: Secrets and credentials (CI tokens, deployment tokens) are strictly stored in GitHub Encrypted Secrets with environment protection rules. Zero credentials, API keys, or private keys are stored in source code.
+* **Access Control**: Access to production secrets is restricted to the Lead Maintainer and requires multi-factor authentication (2FA).
+* **Rotation**: Tokens are rotated on a 90-day cadence. Any credential suspected of compromise is revoked immediately.
+
+---
+
+## Software Composition Analysis (SCA) Policy
+
+All dependencies are continuously evaluated in CI using `pip-audit` and `npm audit`.
+* **Remediation Thresholds**:
+  * **Critical & High Severity**: Remediation required within **7 days**. All releases are blocked until resolved.
+  * **Medium Severity**: Remediation required within **30 days**.
+  * **Low Severity**: Remediation scheduled in the next regular sprint/minor release.
+* **Pre-Release Gate**: No official release may be published with unaddressed High or Critical SCA violations unless formally documented as non-exploitable in [docs/VEX.json](docs/VEX.json).
+
+---
+
+## Static Application Security Testing (SAST) Policy
+
+All code changes are automatically scanned using `bandit`, `ruff`, and `eslint` in GitHub Actions.
+* **Zero Critical/High Tolerance**: Pull requests introducing High or Medium security warnings are blocked automatically in CI.
+* **Suppression Policy**: False positives must be documented with an explicit rationale in security configuration files or suppressed via audited VEX declarations.
 
 ---
 

@@ -59,8 +59,8 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-[security@originmark.dev](mailto:security@originmark.dev).
+reported to the community leaders responsible for enforcement via
+[GitHub Security Advisories](https://github.com/krikera/originmark-platform/security/advisories) or directly to [@krikera](https://github.com/krikera).
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

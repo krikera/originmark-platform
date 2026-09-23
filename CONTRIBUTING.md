@@ -8,7 +8,7 @@ This document outlines the guidelines and conventions for contributing to the re
 
 ## Code of Conduct
 
-By participating in this project, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md). Please report any unacceptable behavior to [security@originmark.dev](mailto:security@originmark.dev).
+By participating in this project, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md). Please report any unacceptable behavior via the channels outlined in our [Code of Conduct](CODE_OF_CONDUCT.md#enforcement).
 
 ---
 

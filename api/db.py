@@ -1,12 +1,11 @@
 import os
+import secrets
 from datetime import datetime, timezone
 from typing import Optional
-import secrets
-
-from sqlalchemy import create_engine, Column, String, DateTime, Text, Integer, Boolean, Float
-from sqlalchemy.orm import DeclarativeBase, sessionmaker, Mapped, mapped_column
 
 from dotenv import load_dotenv
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,7 +28,7 @@ def utc_now() -> datetime:
 
 class User(Base):
     __tablename__ = "users"
-    
+
     id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     username: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
@@ -41,7 +40,7 @@ class User(Base):
 
 class APIKey(Base):
     __tablename__ = "api_keys"
-    
+
     id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     user_id: Mapped[str] = mapped_column(String, nullable=False)
     key_hash: Mapped[str] = mapped_column(String, nullable=False, unique=True)
@@ -56,7 +55,7 @@ class APIKey(Base):
 
 class SignatureMetadata(Base):
     __tablename__ = "signatures"
-    
+
     id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     user_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     api_key_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -74,7 +73,7 @@ class SignatureMetadata(Base):
 
 class UsageMetrics(Base):
     __tablename__ = "usage_metrics"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     api_key_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -90,7 +89,7 @@ class UsageMetrics(Base):
 
 class DailyMetricsSummary(Base):
     __tablename__ = "daily_metrics_summary"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     total_sign_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -104,7 +103,7 @@ class DailyMetricsSummary(Base):
 
 class UserFeedback(Base):
     __tablename__ = "user_feedback"
-    
+
     id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     user_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     feedback_type: Mapped[str] = mapped_column(String, nullable=False)
@@ -118,7 +117,7 @@ class UserFeedback(Base):
 
 class WebhookModel(Base):
     __tablename__ = "webhooks"
-    
+
     id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     url: Mapped[str] = mapped_column(String, nullable=False)

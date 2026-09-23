@@ -3,6 +3,7 @@ Tests for Admin endpoints, user feedback, metrics telemetry, and Webhooks.
 """
 
 import pytest
+
 from db import User
 
 
@@ -71,7 +72,7 @@ class TestFeedbackWorkflow:
                 "feedback_type": "feature",
                 "message": "Please add batch C2PA manifest download",
                 "rating": 5,
-                "page_url": "https://originmark.dev",
+                "page_url": "https://originmark-platform.vercel.app",
             },
         )
         assert response.status_code == 200

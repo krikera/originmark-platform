@@ -10,10 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- GitHub Actions CI workflow for backend tests (`pytest`) and frontend checks (`tsc`, `eslint`).
-- Community health files: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.github/ISSUE_TEMPLATE`, and `.github/pull_request_template.md`.
-- Automated testing policy and guidelines for contributors.
-- Security vulnerability reporting SLA and supported versions table in `SECURITY.md`.
+- Dedicated community support guidelines in `SUPPORT.md` completing GitHub community standards.
+- Static code analysis (`ruff`) and vulnerability scanning (`bandit`) integrated into backend CI workflow.
+- Architecture and end-to-end cryptographic signing sequence diagrams embedded in `README.md`.
+- Explicit navigational links to visual flow diagrams (`flow_diagrams/`) in documentation.
+
+### Changed
+- Aligned production domain references, Open Graph tags, and C2PA manifest fallback URLs to `originmark-platform.vercel.app`.
+- Updated vulnerability and Code of Conduct reporting channels to use GitHub Security Advisories.
 
 ---
 

@@ -3,21 +3,19 @@ C2PA (Coalition for Content Provenance and Authenticity) Export Module
 Converts OriginMark signatures to C2PA-compatible manifests
 """
 
-from typing import Dict, Any, Optional, List
 import json
-import base64
-from datetime import datetime, timezone
-import hashlib
-import uuid
 import os
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
 
 @dataclass
 class C2PAAssertion:
     """Represents a C2PA assertion"""
     label: str
     data: Dict[str, Any]
-    
+
 @dataclass
 class C2PAClaim:
     """Represents a C2PA claim"""
@@ -26,19 +24,19 @@ class C2PAClaim:
     assertions: List[Dict[str, Any]] = None
     alg: str = "es256"
     signature: Optional[str] = None
-    
+
     def __post_init__(self):
         if self.assertions is None:
             self.assertions = []
 
 class C2PAManifestExporter:
     """Export OriginMark signatures as C2PA manifests"""
-    
+
     def __init__(self):
         self.version = "1.0"
         self.supported_formats = ["json", "sidecar"]
-        
-    def create_c2pa_manifest(self, 
+
+    def create_c2pa_manifest(self,
                             originmark_signature: Dict[str, Any],
                             asset_content: Optional[bytes] = None,
                             additional_assertions: Optional[List[Dict]] = None) -> Dict[str, Any]:
@@ -55,30 +53,31 @@ class C2PAManifestExporter:
         """
         # Create assertions list
         assertions = []
-        
+
         # Add creation assertion (c2pa.actions)
         creation_assertion = self._create_actions_assertion(originmark_signature)
         assertions.append(asdict(creation_assertion))
-        
+
         # Add data hash assertion (c2pa.hash.data)
         hash_assertion = self._create_hash_assertion(originmark_signature)
         assertions.append(asdict(hash_assertion))
-        
+
         # Add OriginMark signature as custom assertion
         originmark_assertion = self._create_originmark_assertion(originmark_signature)
         assertions.append(asdict(originmark_assertion))
-        
+
         # Add any additional assertions
         if additional_assertions:
             assertions.extend(additional_assertions)
-        
+
         # Create claim
         claim = C2PAClaim(
             title=f"OriginMark Signature {originmark_signature.get('id', 'Unknown')}",
             assertions=assertions
         )
-        
+
         # Create manifest structure
+        app_url = os.environ.get("APP_URL", "https://originmark-platform.vercel.app").rstrip("/")
         manifest = {
             "@context": "https://c2pa.org/specifications/1.4/context.json",
             "format": "application/c2pa",
@@ -88,7 +87,7 @@ class C2PAManifestExporter:
                 {
                     "name": "OriginMark",
                     "version": "0.1.0",
-                    "icon": "https://originmark.dev/icon.png",
+                    "icon": f"{app_url}/icon.svg",
                     "description": "Digital provenance and authenticity verification"
                 }
             ],
@@ -97,7 +96,7 @@ class C2PAManifestExporter:
             "claim": asdict(claim),
             "validation_status": [{
                 "code": "claimSignature.verified",
-                "url": f"https://originmark.dev/verify/{originmark_signature.get('id')}",
+                "url": f"{app_url}/verify/{originmark_signature.get('id')}",
                 "explanation": "OriginMark cryptographic signature verified"
             }],
             "signature_info": {
@@ -108,18 +107,18 @@ class C2PAManifestExporter:
                 "signature_id": originmark_signature.get("id"),
                 "export_version": self.version,
                 "export_timestamp": datetime.now(timezone.utc).isoformat(),
-                "verification_url": f"https://originmark.dev/verify/{originmark_signature.get('id')}",
+                "verification_url": f"{app_url}/verify/{originmark_signature.get('id')}",
                 "manifest_specification": "C2PA v1.4 JSON Claim"
             }
         }
-        
+
         return manifest
-    
+
     def _create_actions_assertion(self, signature: Dict[str, Any]) -> C2PAAssertion:
         """Create c2pa.actions assertion"""
         timestamp = signature.get("timestamp", datetime.now(timezone.utc).isoformat())
         metadata = signature.get("metadata", {})
-        
+
         actions = [{
             "action": "c2pa.created",
             "when": timestamp,
@@ -130,7 +129,7 @@ class C2PAManifestExporter:
             },
             "digitalSourceType": "algorithmicMedia" if metadata.get("model_used") else "other"
         }]
-        
+
         # Add AI model information if available
         if metadata.get("model_used"):
             actions.append({
@@ -140,16 +139,16 @@ class C2PAManifestExporter:
                 "softwareAgent": {
                     "name": metadata["model_used"],
                     "version": "unknown",
-                    "description": f"AI model used for content generation"
+                    "description": "AI model used for content generation"
                 },
                 "reason": "Content generated using AI model with OriginMark signature verification"
             })
-        
+
         return C2PAAssertion(
             label="c2pa.actions",
             data={"actions": actions}
         )
-    
+
     def _create_hash_assertion(self, signature: Dict[str, Any]) -> C2PAAssertion:
         """Create c2pa.hash.data assertion"""
         return C2PAAssertion(
@@ -161,11 +160,11 @@ class C2PAManifestExporter:
                 "name": "jumbf manifest"
             }
         )
-    
+
     def _create_originmark_assertion(self, signature: Dict[str, Any]) -> C2PAAssertion:
         """Create custom OriginMark assertion"""
         metadata = signature.get("metadata", {})
-        
+
         return C2PAAssertion(
             label="org.originmark.signature",
             data={
@@ -178,8 +177,8 @@ class C2PAManifestExporter:
                 "timestamp": signature.get("timestamp")
             }
         )
-    
-    def export_to_json(self, 
+
+    def export_to_json(self,
                       originmark_signature: Dict[str, Any],
                       output_path: Optional[str] = None) -> str:
         """
@@ -194,15 +193,15 @@ class C2PAManifestExporter:
         """
         manifest = self.create_c2pa_manifest(originmark_signature)
         json_str = json.dumps(manifest, indent=2, sort_keys=True)
-        
+
         if output_path:
             safe_filename = os.path.basename(output_path)
             with open(safe_filename, 'w') as f:
                 f.write(json_str)
-                
+
         return json_str
-    
-    def export_to_sidecar(self, 
+
+    def export_to_sidecar(self,
                          originmark_signature: Dict[str, Any],
                          asset_path: str,
                          output_path: Optional[str] = None) -> str:
@@ -221,20 +220,20 @@ class C2PAManifestExporter:
             output_path = f"{os.path.basename(asset_path)}.c2pa"
         else:
             output_path = os.path.basename(output_path)
-            
+
         manifest = self.create_c2pa_manifest(originmark_signature)
-        
+
         # Add asset reference
         manifest["asset_reference"] = {
             "path": os.path.basename(asset_path),
             "hash": originmark_signature.get("content_hash")
         }
-        
+
         with open(output_path, 'w') as f:
             json.dump(manifest, f, indent=2)
-            
+
         return output_path
-    
+
     def validate_export(self, manifest: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate exported manifest meets C2PA requirements
@@ -247,34 +246,34 @@ class C2PAManifestExporter:
         """
         errors = []
         warnings = []
-        
+
         # Check required fields
         if "claim" not in manifest:
             errors.append("Missing required 'claim' field")
-            
+
         claim = manifest.get("claim", {})
-        
+
         if "assertions" not in claim:
             errors.append("Missing required 'assertions' field in claim")
-            
+
         # Check for required assertions
         assertions = claim.get("assertions", [])
         has_actions = any(a.get("label") == "c2pa.actions" for a in assertions)
         has_hash = any(a.get("label") == "c2pa.hash.data" for a in assertions)
-        
+
         if not has_actions:
             warnings.append("Missing recommended 'c2pa.actions' assertion")
-            
+
         if not has_hash:
             errors.append("Missing required 'c2pa.hash.data' assertion")
-            
+
         # Validate assertion structure
         for i, assertion in enumerate(assertions):
             if "label" not in assertion:
                 errors.append(f"Assertion {i} missing 'label' field")
             if "data" not in assertion:
                 errors.append(f"Assertion {i} missing 'data' field")
-                
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,
@@ -298,16 +297,16 @@ if __name__ == "__main__":
             "content_type": "text"
         }
     }
-    
+
     # Create exporter
     exporter = C2PAManifestExporter()
-    
+
     # Export to JSON
     json_manifest = exporter.export_to_json(example_signature)
     print("C2PA Manifest (JSON):")
     print(json_manifest)
-    
+
     # Validate
     manifest = json.loads(json_manifest)
     validation = exporter.validate_export(manifest)
-    print(f"\nValidation: {validation}") 
+    print(f"\nValidation: {validation}")

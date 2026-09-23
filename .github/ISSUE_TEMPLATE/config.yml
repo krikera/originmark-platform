@@ -6,3 +6,6 @@ contact_links:
   - name: "GitHub Discussions & Q&A"
     url: "https://github.com/krikera/originmark-platform/discussions"
     about: "Ask questions, share ideas, and engage with the OriginMark community."
+  - name: "Community Support Resources"
+    url: "https://github.com/krikera/originmark-platform/blob/main/SUPPORT.md"
+    about: "Find help channels, documentation, and community resources."

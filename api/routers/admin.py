@@ -14,8 +14,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlalchemy.orm import Session
 
-from db import get_db, APIKey, UserFeedback, User
-from dependencies import get_api_key, get_optional_api_key, get_current_user_id
+from db import APIKey, User, UserFeedback, get_db
+from dependencies import get_current_user_id, get_optional_api_key
 from telemetry import telemetry
 
 router = APIRouter(tags=["admin"])

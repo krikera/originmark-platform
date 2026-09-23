@@ -1,0 +1,3 @@
+# Bandit security configuration
+skips: ['B104', 'B105']
+exclude_dirs: ['/tests', '/venv', '/alembic', '/.pytest_cache']

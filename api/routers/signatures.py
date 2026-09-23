@@ -11,23 +11,23 @@ Endpoints:
 """
 
 import base64
+import html
 import json
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-import nacl.signing
 import nacl.exceptions
+import nacl.signing
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-import html
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from c2pa_export import C2PAManifestExporter
-from db import get_db, APIKey, SignatureMetadata, User
-from dependencies import compute_hash, get_api_key, get_optional_api_key, get_current_user_id
+from db import APIKey, SignatureMetadata, User, get_db
+from dependencies import compute_hash, get_current_user_id, get_optional_api_key
 from telemetry import telemetry
 from webhooks import notify_signature_created
 

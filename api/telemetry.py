@@ -1,15 +1,17 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import func, text
-from db import UsageMetrics, DailyMetricsSummary, UserFeedback, get_db
-from datetime import datetime, timedelta, timezone, date
 import json
-import time
-from typing import Optional, Dict, Any
 import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
+
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from db import DailyMetricsSummary, UsageMetrics, UserFeedback
+
 
 class TelemetryTracker:
     """Handles telemetry and analytics tracking"""
-    
+
     @staticmethod
     async def track_usage(
         db: Session,
@@ -43,7 +45,7 @@ class TelemetryTracker:
             # Don't let telemetry errors break the main flow
             print(f"Telemetry error: {e}")
             db.rollback()
-    
+
     @staticmethod
     async def update_daily_summary(db: Session):
         """Update daily metrics summary - should be run periodically"""
@@ -51,33 +53,33 @@ class TelemetryTracker:
             today = datetime.now(timezone.utc).date()
             start_of_day = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
             end_of_day = start_of_day + timedelta(days=1)
-            
+
             # Get or create today's summary
             summary = db.query(DailyMetricsSummary).filter(
                 func.date(DailyMetricsSummary.date) == today
             ).first()
-            
+
             if not summary:
                 summary = DailyMetricsSummary(date=start_of_day)
                 db.add(summary)
-            
+
             # Calculate metrics for today
             today_metrics = db.query(UsageMetrics).filter(
                 UsageMetrics.timestamp >= start_of_day,
                 UsageMetrics.timestamp < end_of_day
             )
-            
+
             # Count actions
             summary.total_sign_count = today_metrics.filter(
                 UsageMetrics.action == "sign"
             ).count()
-            
+
             summary.total_verify_count = today_metrics.filter(
                 UsageMetrics.action == "verify"
             ).count()
-            
+
             summary.total_api_calls = today_metrics.count()
-            
+
             # Count unique users
             unique_users = db.query(func.count(func.distinct(UsageMetrics.user_id))).filter(
                 UsageMetrics.timestamp >= start_of_day,
@@ -85,7 +87,7 @@ class TelemetryTracker:
                 UsageMetrics.user_id.isnot(None)
             ).scalar()
             summary.unique_users = unique_users or 0
-            
+
             # Calculate average response time
             avg_response = db.query(func.avg(UsageMetrics.response_time_ms)).filter(
                 UsageMetrics.timestamp >= start_of_day,
@@ -93,36 +95,36 @@ class TelemetryTracker:
                 UsageMetrics.response_time_ms.isnot(None)
             ).scalar()
             summary.avg_response_time_ms = float(avg_response) if avg_response else None
-            
+
             # Count errors
             summary.error_count = today_metrics.filter(
                 UsageMetrics.status_code >= 400
             ).count()
-            
+
             db.commit()
-            
+
         except Exception as e:
             print(f"Daily summary update error: {e}")
             db.rollback()
-    
+
     @staticmethod
     async def get_metrics_summary(db: Session, days: int = 7) -> Dict[str, Any]:
         """Get metrics summary for the specified number of days"""
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days)
-        
+
         # Get usage metrics
         metrics = db.query(UsageMetrics).filter(
             UsageMetrics.timestamp >= start_date,
             UsageMetrics.timestamp <= end_date
         )
-        
+
         # Get daily summaries
         daily_summaries = db.query(DailyMetricsSummary).filter(
             DailyMetricsSummary.date >= start_date,
             DailyMetricsSummary.date <= end_date
         ).order_by(DailyMetricsSummary.date.desc()).all()
-        
+
         # Calculate totals
         total_signs = metrics.filter(UsageMetrics.action == "sign").count()
         total_verifies = metrics.filter(UsageMetrics.action == "verify").count()
@@ -132,7 +134,7 @@ class TelemetryTracker:
             UsageMetrics.timestamp <= end_date,
             UsageMetrics.user_id.isnot(None)
         ).scalar()
-        
+
         # Get action breakdown
         action_breakdown = db.query(
             UsageMetrics.action,
@@ -141,7 +143,7 @@ class TelemetryTracker:
             UsageMetrics.timestamp >= start_date,
             UsageMetrics.timestamp <= end_date
         ).group_by(UsageMetrics.action).all()
-        
+
         # Get content type breakdown
         content_breakdown = db.query(
             UsageMetrics.content_type,
@@ -151,12 +153,12 @@ class TelemetryTracker:
             UsageMetrics.timestamp <= end_date,
             UsageMetrics.content_type.isnot(None)
         ).group_by(UsageMetrics.content_type).all()
-        
+
         # Get recent feedback
         recent_feedback = db.query(UserFeedback).order_by(
             UserFeedback.created_at.desc()
         ).limit(10).all()
-        
+
         return {
             "period": {
                 "start": start_date.isoformat(),
@@ -181,12 +183,8 @@ class TelemetryTracker:
                 }
                 for summary in daily_summaries
             ],
-            "action_breakdown": {
-                action: count for action, count in action_breakdown
-            },
-            "content_type_breakdown": {
-                content_type: count for content_type, count in content_breakdown
-            },
+            "action_breakdown": dict(action_breakdown),
+            "content_type_breakdown": dict(content_breakdown),
             "recent_feedback": [
                 {
                     "id": feedback.id,
@@ -198,7 +196,7 @@ class TelemetryTracker:
                 for feedback in recent_feedback
             ]
         }
-    
+
     @staticmethod
     async def record_feedback(
         db: Session,
@@ -227,4 +225,4 @@ class TelemetryTracker:
 
 
 # Global telemetry instance
-telemetry = TelemetryTracker() 
+telemetry = TelemetryTracker()

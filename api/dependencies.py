@@ -12,23 +12,21 @@ Supports two auth methods:
 import hashlib
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 import bcrypt
 import jwt
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.orm import Session
+
+from db import APIKey, User, get_db, hash_api_key
 
 limiter = Limiter(
-    key_func=get_remote_address, 
+    key_func=get_remote_address,
     enabled=os.environ.get("TESTING") != "true"
 )
-
-from db import get_db, APIKey, User, hash_api_key
-
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
@@ -172,11 +170,11 @@ async def get_current_user_id(
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token payload")
-        
+
     user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found or inactive")
-        
+
     return user_id
 
 

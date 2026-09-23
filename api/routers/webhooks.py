@@ -15,9 +15,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from db import get_db, WebhookModel
+from db import WebhookModel, get_db
 from dependencies import get_current_user_id
-from webhooks import webhook_manager, WebhookConfig, WebhookType, WebhookEvent, is_safe_url
+from webhooks import WebhookConfig, WebhookEvent, WebhookType, is_safe_url, webhook_manager
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 

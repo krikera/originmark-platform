@@ -8,7 +8,7 @@ Covers:
     - Auth failures (bad password, expired token, etc.)
 """
 
-from dependencies import create_access_token, decode_access_token
+from dependencies import decode_access_token
 
 
 class TestRegistration:
@@ -168,9 +168,11 @@ class TestJWTSecurity:
 
     def test_expired_token_rejected(self, client, registered_user):
         """Expired JWT tokens should be rejected."""
+        from datetime import datetime, timedelta, timezone
+
         import jwt as pyjwt
-        from dependencies import JWT_SECRET_KEY, JWT_ALGORITHM
-        from datetime import datetime, timezone, timedelta
+
+        from dependencies import JWT_ALGORITHM, JWT_SECRET_KEY
 
         # Create an already-expired token
         expired_payload = {

@@ -6,6 +6,7 @@ for each test. Every test gets a clean database — no state leaks.
 """
 
 import os
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -18,7 +19,6 @@ os.environ["TESTING"] = "true"
 
 from db import Base, get_db
 from main import app
-
 
 # ── Database fixtures ────────────────────────────────────────────────────────
 

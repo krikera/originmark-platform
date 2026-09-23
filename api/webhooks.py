@@ -2,17 +2,18 @@
 OriginMark Webhook System for Slack and Discord notifications
 """
 
+import hashlib
+import hmac
+import ipaddress
 import json
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timezone
+import socket
+from enum import Enum
+from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
+
 import aiohttp
 from pydantic import BaseModel, HttpUrl
-from enum import Enum
-import hmac
-import hashlib
-import socket
-import ipaddress
-from urllib.parse import urlparse
+
 
 def is_safe_url(url_str: str) -> bool:
     try:
@@ -47,21 +48,21 @@ class WebhookManager:
     def __init__(self):
         self.webhooks: Dict[str, WebhookConfig] = {}
         self.session: Optional[aiohttp.ClientSession] = None
-    
+
     async def trigger_event(self, event: WebhookEvent, data: Dict[str, Any]):
         """Trigger a webhook event"""
         webhooks = [w for w in self.webhooks.values() if event in w.events and w.is_active]
-        
+
         for webhook in webhooks:
             await self.send_webhook(webhook, event, data)
-    
+
     async def send_webhook(self, webhook: WebhookConfig, event: WebhookEvent, data: Dict[str, Any]):
         """Send webhook notification"""
         if webhook.type == WebhookType.SLACK:
             message = self.format_slack_message(event, data)
         else:  # Discord
             message = self.format_discord_message(event, data)
-        
+
         headers = {"Content-Type": "application/json"}
         if webhook.secret:
             signature = hmac.new(
@@ -70,13 +71,13 @@ class WebhookManager:
                 hashlib.sha256
             ).hexdigest()
             headers["X-Signature-256"] = signature
-        
+
         if not self.session:
             self.session = aiohttp.ClientSession()
-            
+
         try:
             async with self.session.post(
-                str(webhook.url), 
+                str(webhook.url),
                 json=message,
                 headers=headers
             ) as response:
@@ -84,7 +85,7 @@ class WebhookManager:
                     print(f"Webhook failed with status {response.status}")
         except Exception as e:
             print(f"Failed to send webhook: {e}")
-    
+
     def format_slack_message(self, event: WebhookEvent, data: Dict[str, Any]) -> Dict:
         """Format Slack message"""
         if event == WebhookEvent.SIGNATURE_CREATED:
@@ -99,7 +100,7 @@ class WebhookManager:
                 }]
             }
         return {"text": f"OriginMark event: {event}"}
-    
+
     def format_discord_message(self, event: WebhookEvent, data: Dict[str, Any]) -> Dict:
         """Format Discord message"""
         if event == WebhookEvent.SIGNATURE_CREATED:

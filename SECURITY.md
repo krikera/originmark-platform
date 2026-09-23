@@ -21,10 +21,10 @@ If you discover a security vulnerability in OriginMark, **please do NOT disclose
 
 ### Preferred Reporting Channels
 
-1. **GitHub Private Vulnerability Reporting**:
-   Navigate to the [Security Advisories](https://github.com/krikera/originmark-platform/security/advisories) tab and click **"Report a vulnerability"**. This creates a confidential channel between you and the project maintainers.
-2. **Direct Security Email**:
-   If you cannot use GitHub's private reporting, email details to **[security@originmark.dev](mailto:security@originmark.dev)**. Please include:
+1. **GitHub Private Vulnerability Reporting (Recommended)**:
+   Navigate to the [Security Advisories](https://github.com/krikera/originmark-platform/security/advisories) tab and click **"Report a vulnerability"**. This creates an encrypted, confidential disclosure channel between you and the project maintainers.
+2. **Direct Maintainer Contact**:
+   If you cannot access GitHub Private Vulnerability Reporting, contact the maintainers confidentially via [GitHub Security Advisories](https://github.com/krikera/originmark-platform/security/advisories/new) or reach out directly to the maintainer profile [@krikera](https://github.com/krikera). Please include:
    * A detailed description of the vulnerability.
    * Reproduction steps or a minimal proof-of-concept (PoC).
    * Potential impact and affected endpoints/components.

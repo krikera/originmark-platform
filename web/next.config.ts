@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         remotePatterns: [
             {
                 protocol: "https",
+                hostname: "originmark-platform.vercel.app",
+            },
+            {
+                protocol: "https",
                 hostname: "**.originmark.dev",
             },
         ],

@@ -81,6 +81,39 @@ graph TB
     CryptoLayer --> OutputLayer
 ```
 
+### End-to-End Signing & Verification Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Creator as Content Creator
+    participant Web as Web Dashboard / Client
+    participant API as FastAPI Backend
+    participant Crypto as Ed25519 Engine
+    participant DB as Database (Postgres/SQLite)
+    participant Hook as Webhook System (Slack/Discord)
+    actor Verifier as Third-Party Verifier
+
+    Note over Creator,API: Phase 1: Cryptographic Signing
+    Creator->>Web: Upload Content (Text/Image/Media)
+    Web->>API: POST /sign (Content + Metadata + Optional PrivKey)
+    API->>Crypto: Compute SHA-256 Digest
+    API->>Crypto: Sign Digest with Ed25519 Private Key
+    Crypto-->>API: Signature + Public Key
+    API->>DB: Store Public Signature Metadata
+    API->>Hook: Dispatch signature.created Notification
+    API-->>Web: Return Signature + .originmark.json Sidecar + C2PA Manifest
+    Web-->>Creator: Download Provenance Package
+
+    Note over Verifier,Crypto: Phase 2: Independent Verification
+    Verifier->>Web: Provide Original Asset + Sidecar
+    Web->>API: POST /verify (Asset + Signature + PublicKey)
+    API->>Crypto: Re-hash Asset with SHA-256
+    API->>Crypto: Verify Signature against PubKey & Re-computed Digest
+    Crypto-->>API: Cryptographic Verification Result (Valid / Invalid)
+    API-->>Verifier: Proof of Origin & Integrity Confirmed
+```
+
 ### Signing and Verification Lifecycle
 
 1. **Hashing**: The binary content of the target file is hashed using SHA-256.
@@ -130,7 +163,11 @@ graph TB
 
 * **[Developer Guide](docs/DEVELOPER_GUIDE.md)**: Deep dive into API design, authentication modes, database migrations (Alembic), and schema specifications.
 * **[C2PA Integration Guide](docs/c2pa-integration.md)**: C2PA claim architecture, assertions, and manifest schemas.
-* **[Flow Diagrams](flow_diagrams/)**: Detailed visual diagrams covering API architecture, frontend components, and data pipelines.
+* **[Flow Diagrams & Visual Architecture](flow_diagrams/README.md)**:
+  * **[API Architecture](flow_diagrams/01-api-architecture.md)**: Routing, database models, and authentication logic.
+  * **[Web Dashboard Flow](flow_diagrams/02-web-dashboard.md)**: Next.js 16 components, state management, and interaction flows.
+  * **[System Overview](flow_diagrams/03-system-overview.md)**: High-level architectural boundaries and external integrations.
+* **[Support Resources](SUPPORT.md)**: Community channels, issue filing guidance, and help resources.
 
 ---
 
@@ -160,7 +197,7 @@ We welcome feedback, questions, and feature suggestions:
 OriginMark follows strict cryptographic and data privacy principles:
 * **Private Key Custody**: Private keys are never stored on our servers.
 * **Encryption & Hashing**: Ed25519, SHA-256, and bcrypt for password storage.
-* **Vulnerability Reporting**: Please report vulnerabilities confidentially via [GitHub Private Vulnerability Reporting](https://github.com/krikera/originmark-platform/security/advisories) or email [security@originmark.dev](mailto:security@originmark.dev). Review our [Security Policy](SECURITY.md) for SLAs and supported versions.
+* **Vulnerability Reporting**: Please report vulnerabilities confidentially via [GitHub Private Vulnerability Reporting](https://github.com/krikera/originmark-platform/security/advisories). Review our [Security Policy](SECURITY.md) for SLAs and supported versions.
 
 ---
 
